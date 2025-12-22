@@ -1,0 +1,84 @@
+:root {
+  --clay: #a05f41;
+  --sand: #f4e9d5;
+  --glaze: #4a6c6f;
+  --text: #333;
+}
+
+body {
+  font-family: 'Helvetica Neue', sans-serif;
+  background-color: var(--sand);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+}
+
+.navbar {
+  background-color: var(--clay);
+  padding: 1rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar h1 { margin: 0; }
+.nav-links button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Home Grid */
+.product-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  width: 250px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.btn {
+  background-color: var(--glaze);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* Forms */
+.form-box {
+  background: white;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
