@@ -9,11 +9,11 @@ const JWT_SECRET = "secret123";
 
 // --- NODEMAILER CONFIG ---
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: "bashobyshivangi@gmail.com", // <--- UPDATE THIS
-    pass: "ropt eszn ojog vfcz"    // <--- UPDATE THIS
-  }
+    service: 'gmail',
+    auth: {
+        user: "bashobyshivangi@gmail.com", // <--- UPDATE THIS
+        pass: "ropt eszn ojog vfcz"    // <--- UPDATE THIS
+    }
 });
 
 // Helper to generate & send OTP
@@ -39,7 +39,7 @@ router.post('/register', async (req, res) => {
 
         // 1. Check if user already exists
         let user = await User.findOne({ email });
-        
+
         // If user exists AND is verified, stop them
         if (user && user.isVerified) {
             return res.status(400).json({ msg: "User already exists" });
@@ -49,10 +49,10 @@ router.post('/register', async (req, res) => {
         if (!user) {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
-            
-            user = new User({ 
-                name, 
-                email, 
+
+            user = new User({
+                name,
+                email,
                 password: hashedPassword,
                 isVerified: false // Important flag
             });
@@ -91,7 +91,7 @@ router.post('/verify-register', async (req, res) => {
     try {
         const { email, otp } = req.body;
         const user = await User.findOne({ email });
-        
+
         if (!user) return res.status(400).json({ msg: "User not found" });
         if (user.otp !== otp || user.otpExpires < Date.now()) return res.status(400).json({ msg: "Invalid OTP" });
 
@@ -109,15 +109,15 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
-        
+
         if (!user) return res.status(400).json({ msg: "User not found" });
         if (!user.isVerified) return res.status(400).json({ msg: "Email not verified. Please register again." });
-        
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
         const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
-        
+
         res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
     } catch (err) { res.status(500).json({ msg: "Server Error" }); }
 });
@@ -127,7 +127,7 @@ router.post('/req-otp', async (req, res) => {
     try {
         const { email } = req.body;
         const user = await User.findOne({ email });
-        
+
         if (!user) return res.status(404).json({ msg: "User not found" });
 
         // Generate OTP
@@ -139,14 +139,32 @@ router.post('/req-otp', async (req, res) => {
         // Send Email (Using your Nodemailer setup)
         // Make sure you import 'transporter' or pass the email logic here
         // NOTE: You might need to export 'sendOtpEmail' helper from your main file or redefine it here.
-        
+
         const mailOptions = {
-            from: `"OTP" <bashobyshivangi@gmail.com>`,
+            from: `"Basho Support" <bashobyshivangi@gmail.com>`, // Use a business-like name
             to: email,
-            subject: "Action Confirmation OTP",
-            text: `Your Verification Code is: ${otp}`
+            subject: "Verify Your Account",
+            text: `Your Verification Code is: ${otp}`, // Fallback for old devices
+            html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <h2 style="color: #2c3e50; text-align: center;">Welcome to Basho!</h2>
+            <p style="font-size: 16px; color: #555;">Hi there,</p>
+            <p style="font-size: 16px; color: #555;">Thank you for registering. Please use the verification code below to complete your signup:</p>
+            
+            <div style="background-color: #f8f9fa; padding: 15px; margin: 20px 0; text-align: center; border-radius: 5px; border: 1px dashed #ccc;">
+                <h1 style="color: #007bff; letter-spacing: 5px; margin: 0; font-size: 32px;">${otp}</h1>
+            </div>
+
+            <p style="font-size: 14px; color: #777;">This code expires in 10 minutes.</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+            <p style="font-size: 12px; color: #aaa; text-align: center;">
+                If you did not request this email, please ignore it.<br>
+                &copy; Basho by Shivangi
+            </p>
+        </div>
+    `
         };
-        
+
         // Assuming 'transporter' is available here (imported from config or defined above)
         await transporter.sendMail(mailOptions);
 

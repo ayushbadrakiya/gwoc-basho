@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const palette = {
+  deep: '#442D1C',
+  ember: '#652810',
+  copper: '#8E5022',
+  flame: '#C85428',
+  sand: '#EDD8B4'
+};
+
 const MyOrders = () => {
   const [myOrders, setMyOrders] = useState([]);
   const user = JSON.parse(localStorage.getItem('user'));
@@ -59,13 +67,13 @@ const MyOrders = () => {
         {/* Grey Background Line */}
         <div style={{ 
             position: 'absolute', top: '15px', left: '0', width: '100%', height: '4px', 
-            background: '#e0e0e0', zIndex: 0 
+            background: 'rgba(68,45,28,0.1)', zIndex: 0 
         }}></div>
 
         {/* Green Progress Line (Calculated Width) */}
         <div style={{ 
             position: 'absolute', top: '15px', left: '0', height: '4px', 
-            background: '#28a745', zIndex: 0, transition: 'width 0.3s',
+            background: palette.flame, zIndex: 0, transition: 'width 0.3s',
             width: `${(activeIndex / (stages.length - 1)) * 100}%`
         }}></div>
 
@@ -77,14 +85,14 @@ const MyOrders = () => {
                     {/* Circle */}
                     <div style={{ 
                         width: '30px', height: '30px', borderRadius: '50%', margin: '0 auto',
-                        background: isActive ? '#28a745' : '#e0e0e0',
+                        background: isActive ? palette.flame : 'rgba(68,45,28,0.12)',
                         color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontWeight: 'bold', fontSize: '14px', border: '2px solid white'
                     }}>
                         {isActive ? '✓' : index + 1}
                     </div>
                     {/* Text Label */}
-                    <p style={{ fontSize: '12px', marginTop: '5px', color: isActive ? 'black' : '#999', fontWeight: isActive ? 'bold' : 'normal' }}>
+                    <p style={{ fontSize: '12px', marginTop: '5px', color: isActive ? palette.deep : '#999', fontWeight: isActive ? 'bold' : 'normal' }}>
                         {stage}
                     </p>
                 </div>
@@ -95,28 +103,28 @@ const MyOrders = () => {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h2>My Order History</h2>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', background: 'linear-gradient(180deg, rgba(237,216,180,0.35), rgba(237,216,180,0.15))', minHeight: '100vh' }}>
+      <h2 style={{ color: palette.deep }}>My Order History</h2>
       {myOrders.length === 0 && <p>You haven't placed any orders yet.</p>}
       
       {myOrders.map(order => (
         <div key={order._id} style={{ 
-            border: '1px solid #ccc', padding: '20px', marginBottom: '20px', borderRadius: '8px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.05)', background: order.status === 'CANCELLED' ? '#f9f9f9' : 'white'
+            border: `1px solid ${palette.copper}30`, padding: '20px', marginBottom: '20px', borderRadius: '12px',
+            boxShadow: '0 12px 24px rgba(68,45,28,0.08)', background: order.status === 'CANCELLED' ? 'rgba(200,84,40,0.08)' : 'rgba(255,255,255,0.95)'
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
                 <div>
-                    <h3 style={{ margin: 0 }}>{order.orderType === 'STANDARD' ? order.productName : 'Custom Request'}</h3>
+                    <h3 style={{ margin: 0, color: palette.deep }}>{order.orderType === 'STANDARD' ? order.productName : 'Custom Request'}</h3>
                     <small>Ordered on: {new Date(order.createdAt).toLocaleDateString()}</small>
                 </div>
                 <div>
-                    <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>₹{order.amount}</span>
+                    <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: palette.ember }}>₹{order.amount}</span>
                 </div>
             </div>
 
             {/* SHOW TRACKER IF NOT CANCELLED */}
             {order.status === 'CANCELLED' ? (
-                <div style={{ padding: '20px', textAlign: 'center', color: 'red', fontWeight: 'bold' }}>
+                <div style={{ padding: '20px', textAlign: 'center', color: palette.ember, fontWeight: 'bold' }}>
                     🚫 ORDER CANCELLED
                 </div>
             ) : (
@@ -125,7 +133,7 @@ const MyOrders = () => {
 
             <div style={{ marginTop: '20px', textAlign: 'right' }}>
                 {order.status !== 'CANCELLED' && order.trackingStatus !== 'Delivered' && (
-                    <button onClick={() => cancelOrder(order._id)} style={{ background: 'red', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer' }}>
+                    <button onClick={() => cancelOrder(order._id)} style={{ background: palette.ember, color: 'white', border: 'none', padding: '10px 16px', borderRadius: '10px', cursor: 'pointer', fontWeight:'600' }}>
                         Cancel Order
                     </button>
                 )}
