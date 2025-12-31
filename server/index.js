@@ -4,6 +4,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const nodemailer = require('nodemailer'); // <--- Import Nodemailer
+const crypto = require('crypto');
 
 
 const app = express();
@@ -13,10 +14,14 @@ const app = express();
 const Order = require('./models/Order');
 const Product = require('./models/Product');
 const User = require('./models/User');
+const ordersRoute = require('./routes/orders');
+const paymentRoute = require('./routes/payment');
 
 
 app.use(cors());
 app.use(express.json());
+app.use('/api/orders', ordersRoute);
+app.use('/api/payment', paymentRoute);
 
 
 // --- EMAIL CONFIGURATION (SAME AS AUTH.JS) ---
@@ -78,83 +83,104 @@ app.use('/api/products', productRoutes);
 // 1. BUY / PLACE ORDER (Sends Confirmation Email)
 app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
   try {
-    // Note: When using Multer, non-file fields are in req.body
     const { 
-            email, 
-            otp, // 👈 Get OTP from frontend
-            productName, 
-            productId, 
-            amount, 
-            productImage, 
-            orderType,
-            customerName,
-            description,
-            material,
-            phone,
-            address,
-            city,
-            zip,
-            customDetails,
-            customImages 
-        } = req.body;
+        email, 
+        otp, 
+        // 👇 NEW: Extract Payment Details
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        // ---------------------------
+        productName, 
+        productId, 
+        amount, 
+        productImage, 
+        orderType,
+        customerName,
+        description,
+        material,
+        phone,
+        address,
+        city,
+        zip,
+        customDetails,
+        customImages 
+    } = req.body;
 
-        // --- SECURITY CHECK: VERIFY OTP ---
-        if (!otp) {
-            return res.status(400).json({ success: false, message: "OTP is required to confirm order." });
+    // --- 1. SECURITY CHECK: VERIFY OTP ---
+    if (!otp) {
+        return res.status(400).json({ success: false, message: "OTP is required to confirm order." });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    if (user.otp !== otp) {
+        return res.status(400).json({ success: false, message: "Invalid OTP. Order failed." });
+    }
+
+    // --- 1.5 SECURITY CHECK: VERIFY RAZORPAY PAYMENT ---
+    // Only verify if it is a paid order (Standard) or amount > 0
+    if (orderType === 'STANDARD' && amount > 0) {
+        
+        if (!razorpay_payment_id || !razorpay_signature) {
+             return res.status(400).json({ success: false, message: "Payment details missing." });
         }
 
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found." });
+        // Create the expected signature
+        const generated_signature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .update(razorpay_order_id + "|" + razorpay_payment_id)
+            .digest('hex');
+
+        // Compare signatures
+        if (generated_signature !== razorpay_signature) {
+            return res.status(400).json({ success: false, message: "Payment verification failed. Invalid Signature." });
         }
+    }
+    // ----------------------------------------------------
 
-        // Compare OTP
-        if (user.otp !== otp) {
-            return res.status(400).json({ success: false, message: "Invalid OTP. Order failed." });
-        }
+    // 2. Clear OTP (Prevent reuse)
+    user.otp = null;
+    await user.save();
 
-        // OPTIONAL: Check for Expiry (if you saved otpExpires in User model)
-        // if (user.otpExpires < Date.now()) return res.status(400).json({ msg: "OTP Expired" });
+    // 3. Save Order to Database
+    const newOrder = new Order({
+        email,
+        productName,
+        productId,
+        amount,
+        productImage,
+        orderType,
+        customerName,
+        description,
+        material,
+        phone,
+        address,
+        city,
+        zip,
+        customDetails,
+        customImages,
+        // 👇 NEW: Save Payment ID
+        paymentId: razorpay_payment_id || null, 
+        status: 'PROCESSING',
+        trackingStatus: 'Processing'
+    });
 
-        // *** OTP IS VALID -> PROCEED ***
-
-        // 2. Clear OTP (Prevent reuse)
-        user.otp = null;
-        await user.save();
-
-        // 3. Save Order to Database
-        const newOrder = new Order({
-            email,
-            productName,
-            productId,
-            amount,
-            productImage,
-            orderType,
-            customerName,
-            description,
-            material,
-            phone,
-            address,
-            city,
-            zip,
-            customDetails,
-            customImages,
-            status: 'PROCESSING',
-            trackingStatus: 'Processing'
-        });
-
-        await newOrder.save();
+    await newOrder.save();
 
     let attachments = [];
 
     // Add the Thank You Image
     attachments.push({
         filename: 'thanks.png',
-        path: 'C:\\Users\\AYUSH\\OneDrive\\Desktop\\gwoc\\client\\public\\thanks.png', // 👈 Update this path to where your file is
-        cid: 'thankyouImage' // 👈 This MUST match the src="cid:..." above
+        path: 'C:\\Users\\AYUSH\\OneDrive\\Desktop\\gwoc\\client\\public\\thanks.png', 
+        cid: 'thankyouImage' 
     });
 
-    // 3. SEND EMAIL (Keep your existing email logic here)
+    // 3. SEND EMAIL
     const emailSubject = `Order Confirmed: ${orderType}`;
     const emailBody = `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 600px; margin: 0 auto;">
@@ -198,6 +224,12 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
               ${amount > 0 ? `₹${amount}` : 'Pending Quote'}
             </td>
           </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Payment Status:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+              ${razorpay_payment_id ? '<span style="color:green">PAID</span>' : 'Unpaid/Pending'}
+            </td>
+          </tr>
         </table>
 
         <h3>📍 Shipping Information</h3>
@@ -220,7 +252,6 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
-
 });
 
    
@@ -310,6 +341,25 @@ app.post('/api/orders/:id/cancel', async (req, res) => {
     }
 });
 
+app.get('/user/:userId', async (req, res) => {
+    try {
+        // Find orders where 'email' matches (or store userId in Order model for better linking)
+        // Assuming we query by email since that's what was saved in previous steps
+        // First, we might need to find the user to get the email, OR the frontend sends the email.
+        // Let's assume we saved 'userId' in the Order model? 
+        // If not, we will query by the email passed in the query string or body.
+        
+        // BETTER APPROACH: Just query by email if that's what we have
+        // But the frontend usually passes ID. Let's try to query by Email for now since Order model has 'email'.
+        
+        const { email } = req.query; // Frontend will send ?email=user@example.com
+        
+        const orders = await Order.find({ email: email }).sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (err) {
+        res.status(500).json({ msg: err.message });
+    }
+});
 // 3. UPDATE TRACKING (Optional: Send Email on "Shipped" or "Delivered")
 app.put('/api/orders/:id/tracking', async (req, res) => {
   try {

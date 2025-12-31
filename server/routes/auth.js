@@ -31,7 +31,51 @@ const sendOtpEmail = async (user, subject) => {
     });
     return otp;
 };
+router.get('/profile/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select('-password -otp'); // Don't send password
+        if (!user) return res.status(404).json({ msg: "User not found" });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ msg: "Server Error" });
+    }
+});
 
+// 2. UPDATE USER PROFILE (Shipping Info)
+router.put('/profile/update', async (req, res) => {
+    try {
+        const { userId, name, phone, address, city, zip } = req.body;
+
+        // Find user and update
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ msg: "User not found" });
+
+        // Update fields
+        user.name = name || user.name;
+        user.phone = phone || '';
+        user.address = address || '';
+        user.city = city || '';
+        user.zip = zip || '';
+
+        await user.save();
+
+        // Return updated user info (excluding password)
+        const updatedUser = {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            phone: user.phone,
+            address: user.address,
+            city: user.city,
+            zip: user.zip
+        };
+
+        res.json({ success: true, user: updatedUser, msg: "Profile Updated Successfully" });
+    } catch (err) {
+        res.status(500).json({ msg: "Server Error" });
+    }
+});
 // 1. REGISTER (Step 1: Save User & Send OTP)
 router.post('/register', async (req, res) => {
     try {
