@@ -25,8 +25,8 @@ app.use('/api/payment', paymentRoute);
 
 
 // --- EMAIL CONFIGURATION (SAME AS AUTH.JS) ---
-const EMAIL_USER = "bashobyshivangi@gmail.com"; 
-const EMAIL_PASS = "ropt eszn ojog vfcz"; // <--- PASTE YOUR APP PASSWORD HERE
+const EMAIL_USER = ""; //PASTE Your sender's email here
+const EMAIL_PASS = ""; // <--- PASTE YOUR APP PASSWORD HERE
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
