@@ -123,7 +123,7 @@ const ProductDetails = () => {
 
             // 3. Configure Razorpay Options
             const options = {
-                key: "rzp_test_RxSehrjb5BD4XK", // 🔴 REPLACE WITH YOUR KEY ID
+                key: "", // 🔴 REPLACE WITH YOUR KEY ID
                 amount: amount.toString(),
                 currency: currency,
                 name: "Basho Pottery",

@@ -8,7 +8,7 @@ mongoose.connect('mongodb://localhost:27017/pottery_shop')
 
 const updateAdmin = async () => {
     // ⚠️ REPLACE THIS with the exact email you used to Sign Up
-    const email = "ayushbadrakiya@gmail.com"; 
+    const email = ""; 
 
     try {
         console.log(`Searching for user with email: ${email}...`);
