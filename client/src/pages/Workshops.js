@@ -11,7 +11,8 @@ const palette = {
     sand: '#EDD8B4',
     lightSand: '#F9F3E9',
     white: '#FFFFFF',
-    shadow: 'rgba(68, 45, 28, 0.1)'
+    shadow: 'rgba(68, 45, 28, 0.1)',
+    error: '#D32F2F' // Added error color
 };
 
 const Workshops = () => {
@@ -20,6 +21,9 @@ const Workshops = () => {
     const [selectedWorkshop, setSelectedWorkshop] = useState(null); 
     const [formDetails, setFormDetails] = useState({ phone: '', experience: 'Beginner' });
     
+    // Validation State
+    const [phoneError, setPhoneError] = useState('');
+
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
 
@@ -47,10 +51,34 @@ const Workshops = () => {
     const initiateBooking = (ws) => {
         if (!user) return navigate('/login');
         setSelectedWorkshop(ws); 
+        setFormDetails({ phone: '', experience: 'Beginner' }); // Reset form
+        setPhoneError(''); // Reset error
+    };
+
+    const handlePhoneChange = (e) => {
+        const val = e.target.value;
+        // Allow only numbers
+        if (!/^\d*$/.test(val)) return;
+        
+        setFormDetails({ ...formDetails, phone: val });
+        
+        // Real-time validation clearing
+        if (phoneError && val.length === 10) {
+            setPhoneError('');
+        }
     };
 
     const handleConfirmBooking = async (e) => {
         e.preventDefault();
+        
+        // --- JAVASCRIPT VALIDATION ---
+        const phoneRegex = /^\d{10}$/;
+        if (!phoneRegex.test(formDetails.phone)) {
+            setPhoneError('Please enter a valid 10-digit mobile number.');
+            return;
+        }
+        setPhoneError(''); // Clear if valid
+
         try {
             const res = await axios.post('http://localhost:5000/api/workshops/register', {
                 userId: user.id,
@@ -307,7 +335,12 @@ const Workshops = () => {
                     border-radius: 8px;
                     background: #FAFAFA;
                     font-size: 1rem;
+                    box-sizing: border-box; /* Fix width issues */
                 }
+                .modal-input:focus { outline: none; border-color: ${palette.copper}; background: #FFF; }
+                
+                .input-error { border-color: ${palette.error} !important; background-color: #fff8f8; }
+                .error-msg { color: ${palette.error}; font-size: 0.85rem; margin-top: -15px; margin-bottom: 15px; display: block; }
 
                 /* --- ANIMATIONS --- */
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -404,16 +437,20 @@ const Workshops = () => {
                             You are registering for <strong>{selectedWorkshop.title}</strong>
                         </p>
                         
-                        <form onSubmit={handleConfirmBooking}>
+                        <form onSubmit={handleConfirmBooking} noValidate>
+                            
                             <label style={{ fontSize: '0.9rem', fontWeight: '600', color: palette.deep }}>Phone Number</label>
                             <input 
-                                className="modal-input"
+                                className={`modal-input ${phoneError ? 'input-error' : ''}`}
                                 required 
                                 type="tel"
                                 placeholder="+91 98765 43210"
+                                maxLength={10}
                                 value={formDetails.phone} 
-                                onChange={e => setFormDetails({...formDetails, phone: e.target.value})}
+                                onChange={handlePhoneChange}
                             />
+                            {/* ERROR MESSAGE */}
+                            {phoneError && <span className="error-msg">{phoneError}</span>}
 
                             <label style={{ fontSize: '0.9rem', fontWeight: '600', color: palette.deep }}>Experience Level</label>
                             <select 

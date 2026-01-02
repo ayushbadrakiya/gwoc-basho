@@ -166,6 +166,68 @@ router.post('/login', async (req, res) => {
     } catch (err) { res.status(500).json({ msg: "Server Error" }); }
 });
 
+// server/routes/auth.js
+
+// 1. Request Password Reset OTP
+router.post('/forgot-password-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Email not found" });
+        }
+
+        // Generate 6 digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Save OTP to user (In production, hash this and set an expiry time)
+        user.otp = otp; 
+        await user.save();
+
+        // Send Email (Reuse your existing nodemailer transporter)
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Reset Password OTP - Basho',
+            text: `Your OTP for password reset is: ${otp}`
+        };
+
+        await transporter.sendMail(mailOptions); // Ensure 'transporter' is defined in your file
+
+        res.json({ success: true, message: "OTP sent to email" });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// 2. Reset Password
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user || user.otp !== otp) {
+            return res.status(400).json({ success: false, message: "Invalid OTP" });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        user.password = hashedPassword;
+        user.otp = null; // Clear OTP
+        await user.save();
+
+        res.json({ success: true, message: "Password reset successful" });
+
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
 // 4. REQUEST OTP (For Ordering/Cancelling)
 router.post('/req-otp', async (req, res) => {
     try {

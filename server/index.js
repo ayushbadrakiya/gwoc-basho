@@ -16,12 +16,18 @@ const Product = require('./models/Product');
 const User = require('./models/User');
 const ordersRoute = require('./routes/orders');
 const paymentRoute = require('./routes/payment');
+// ... existing imports
+const corporateRoutes = require('./routes/corporateRoutes');
+
+// ... existing middleware
+
 
 
 app.use(cors());
 app.use(express.json());
 app.use('/api/orders', ordersRoute);
 app.use('/api/payment', paymentRoute);
+app.use('/api/corporate', corporateRoutes);
 
 
 // --- EMAIL CONFIGURATION (SAME AS AUTH.JS) ---

@@ -14,6 +14,7 @@ import Event from './pages/Event';
 import Testimonials from './pages/Testimonials';
 import Profile from './pages/Profile';
 import Studio from './pages/studio';
+import Corporate from './pages/Corporate';
 
 // --- THEME CONFIGURATION ---
 const palette = {
@@ -270,6 +271,8 @@ const Navigation = () => {
                         <Link to="/event" className={`nav-link ${isActive('/event') ? 'active' : ''}`} onClick={closeMenu}>Events</Link>
                         <Link to="/testimonials" className={`nav-link ${isActive('/testimonials') ? 'active' : ''}`} onClick={closeMenu}>Stories</Link>
                         <Link to="/studio" className={`nav-link ${isActive('/studio') ? 'active' : ''}`} onClick={closeMenu}>Studio</Link>
+                        <Link to="/corporate" className={`nav-link ${isActive('/corporate') ? 'active' : ''}`} onClick={closeMenu}>Collab and Corporate</Link>
+                       
 
                         {/* Admin Link */}
                         {user && user.role === 'admin' && (
@@ -324,6 +327,33 @@ const Footer = () => {
                     <p style={{ opacity: 0.7, marginTop: '20px', lineHeight: '1.6', maxWidth: '300px' }}>
                         Handcrafted pottery inspired by the quiet beauty of Japanese aesthetics. Each piece tells a story of earth and fire.
                     </p>
+
+                    <div style={{ marginTop: '25px' }}>
+                        <a 
+                            href="https://www.instagram.com/bashobyyshivangi/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '10px', 
+                                color: palette.flame, 
+                                textDecoration: 'none', 
+                                fontWeight: '600',
+                                fontSize: '0.9rem',
+                                transition: 'opacity 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.opacity = '0.8'}
+                            onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                            </svg>
+                            <span>Follow on Instagram</span>
+                        </a>
+                    </div>
                 </div>
 
                 {/* Studio Info Column */}
@@ -354,7 +384,7 @@ const Footer = () => {
             </div>
             
             <div style={{ maxWidth: '1400px', margin: '60px auto 0', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', opacity: 0.6, fontSize: '0.85rem' }}>
-                <div>© 2024 Basho Ceramics. All rights reserved.</div>
+                <div>© 2024 Basho byy Shivangi. All rights reserved.</div>
                 <div style={{ display: 'flex', gap: '20px' }}>
                     <span>Privacy Policy</span>
                     <span>Terms of Service</span>
@@ -403,6 +433,7 @@ function App() {
                         <Route path="/testimonials" element={<Testimonials />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/studio" element={<Studio />} />
+                        <Route path="/corporate" element={<Corporate />} />
                     </Routes>
                 </div>
 

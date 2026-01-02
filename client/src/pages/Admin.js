@@ -18,13 +18,17 @@ const palette = {
 const Admin = () => {
     // --- NAVIGATION STATE ---
     const [activeTab, setActiveTab] = useState('products');
-
+    
     // --- DATA STATE ---
     const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
     const [registrations, setRegistrations] = useState([]);
     const [newsList, setNewsList] = useState([]);
     const [testList, setTestList] = useState([]);
+    
+    // Inquiries State
+    const [inquiries, setInquiries] = useState([]);
+    const [loadingInquiries, setLoadingInquiries] = useState(false);
 
     // --- CHART STATE ---
     const [chartData, setChartData] = useState([["Workshop", "Seats"]]);
@@ -46,11 +50,15 @@ const Admin = () => {
 
     // --- EFFECT & FETCHING ---
     useEffect(() => {
+        // Fetch common data
         fetchProducts();
         fetchOrders();
         fetchRegistrations();
         fetchContent();
-    }, []);
+        
+        // Fetch tab specific data
+        if (activeTab === 'inquiries') fetchInquiries();
+    }, [activeTab]);
 
     // --- UPDATE CHART ---
     useEffect(() => {
@@ -67,6 +75,7 @@ const Admin = () => {
         }
     }, [registrations]);
 
+    // --- FETCH FUNCTIONS ---
     const fetchContent = async () => {
         try {
             const resNews = await axios.get('http://localhost:5000/api/content/news');
@@ -92,6 +101,32 @@ const Admin = () => {
             const res = await axios.get('http://localhost:5000/api/orders');
             setOrders(res.data);
         } catch (err) { console.error(err); }
+    };
+    
+    // --- INQUIRY FETCH & DELETE ---
+    const fetchInquiries = async () => {
+        setLoadingInquiries(true);
+        try {
+            const res = await axios.get('http://localhost:5000/api/corporate');
+            setInquiries(res.data);
+        } catch (err) {
+            console.error("Error fetching inquiries", err);
+        }
+        setLoadingInquiries(false);
+    };
+
+    const handleDeleteInquiry = async (id) => {
+        if(!window.confirm("Are you sure you want to delete this inquiry?")) return;
+        
+        try {
+            const res = await axios.delete(`http://localhost:5000/api/corporate/${id}`);
+            if(res.data.success) {
+                // Remove from state immediately
+                setInquiries(inquiries.filter(item => item._id !== id));
+            }
+        } catch (err) {
+            alert("Failed to delete");
+        }
     };
 
     // --- HANDLERS ---
@@ -171,6 +206,25 @@ const Admin = () => {
             await axios.post(`http://localhost:5000/api/orders/${id}/cancel`, { isAdmin: true });
             fetchOrders();
         } catch (err) { alert("Error cancelling"); }
+    };
+
+    // --- HELPER: Service Type Badge Color ---
+    const getBadgeColor = (type) => {
+        switch(type) {
+            case 'Gifting': return '#E8F5E9'; // Green-ish
+            case 'Workshop': return '#E3F2FD'; // Blue-ish
+            case 'Collaboration': return '#F3E5F5'; // Purple-ish
+            default: return '#FFF3E0'; // Orange-ish
+        }
+    };
+
+    const getBadgeTextColor = (type) => {
+        switch(type) {
+            case 'Gifting': return '#2E7D32';
+            case 'Workshop': return '#1565C0';
+            case 'Collaboration': return '#7B1FA2';
+            default: return '#EF6C00';
+        }
     };
 
     // --- STYLES OBJECT ---
@@ -300,6 +354,7 @@ const Admin = () => {
                 /* Layouts */
                 .form-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
                 .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+                .inquiries-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
                 
                 /* Tables */
                 .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid ${palette.border}; }
@@ -320,6 +375,20 @@ const Admin = () => {
                 .badge-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
                 .badge-warn { background: #fff8e1; color: #f57f17; border: 1px solid #ffe0b2; }
                 .badge-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+
+                /* Inquiries Specific Styles */
+                .inquiry-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #EEE; transition: 0.2s; position: relative; }
+                .inquiry-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+                .company-name { font-size: 1.1rem; font-weight: 600; color: ${palette.deep}; margin: 0; }
+                .contact-person { font-size: 0.9rem; color: #888; }
+                .contact-row { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #666; margin-bottom: 5px; }
+                .card-body { font-size: 0.95rem; color: #555; margin-bottom: 20px; line-height: 1.6; background: #FAFAFA; padding: 15px; border-radius: 8px; }
+                .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #EEE; padding-top: 15px; margin-top: 15px; }
+                .action-btn { padding: 8px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
+                .btn-email { background: ${palette.lightSand}; color: ${palette.copper}; text-decoration: none; }
+                .btn-email:hover { background: #EEE; }
+                .btn-delete-icon { background: #FFEBEE; color: #D32F2F; }
+                .btn-delete-icon:hover { background: #FFCDD2; }
 
                 /* Responsive */
                 @media (min-width: 900px) { .form-grid { grid-template-columns: 1fr 1fr; } }
@@ -346,6 +415,7 @@ const Admin = () => {
                 <div className="menu-item-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                     <div style={styles.menuItem(activeTab === 'products')} onClick={() => setActiveTab('products')}>🛍️ Products</div>
                     <div style={styles.menuItem(activeTab === 'workshops')} onClick={() => setActiveTab('workshops')}>📅 Workshops</div>
+                    <div style={styles.menuItem(activeTab === 'inquiries')} onClick={() => setActiveTab('inquiries')}>📅 Corporate Inquiries</div>
                     <div style={styles.menuItem(activeTab === 'orders')} onClick={() => setActiveTab('orders')}>📦 Orders</div>
                     <div style={styles.menuItem(activeTab === 'content')} onClick={() => setActiveTab('content')}>📝 Content</div>
                 </div>
@@ -353,6 +423,80 @@ const Admin = () => {
 
             <div className="admin-content" style={styles.mainContent}>
                 
+                {/* 5. INQUIRIES TAB (New) */}
+                {activeTab === 'inquiries' && (
+                    <>
+                        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                            <h2 style={{ ...styles.header, marginBottom: 0, borderBottom: 'none' }}>Corporate Requests</h2>
+                            <div style={{color: '#888'}}>Total: {inquiries.length}</div>
+                        </div>
+
+                        {loadingInquiries ? (
+                            <p>Loading...</p>
+                        ) : inquiries.length === 0 ? (
+                            <div style={{textAlign: 'center', padding: '60px', color: '#999', background: 'white', borderRadius: '12px'}}>
+                                <p>No business inquiries yet.</p>
+                            </div>
+                        ) : (
+                            <div className="inquiries-grid">
+                                {inquiries.map(inq => (
+                                    <div key={inq._id} className="inquiry-card">
+                                        
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
+                                            <div>
+                                                <h3 className="company-name">{inq.companyName}</h3>
+                                                <span className="contact-person">{inq.contactPerson}</span>
+                                            </div>
+                                            <span 
+                                                className="badge" 
+                                                style={{ 
+                                                    backgroundColor: getBadgeColor(inq.serviceType),
+                                                    color: getBadgeTextColor(inq.serviceType)
+                                                }}
+                                            >
+                                                {inq.serviceType}
+                                            </span>
+                                        </div>
+
+                                        <div className="contact-row">
+                                            ✉️ {inq.email}
+                                        </div>
+                                        <div className="contact-row" style={{marginBottom: '15px'}}>
+                                            📞 {inq.phone}
+                                        </div>
+
+                                        {inq.message && (
+                                            <div className="card-body">
+                                                "{inq.message}"
+                                            </div>
+                                        )}
+
+                                        <div className="card-footer">
+                                            <span style={{ fontSize: '0.85rem', color: '#AAA' }}>
+                                                📅 {new Date(inq.createdAt).toLocaleDateString()}
+                                            </span>
+                                            
+                                            <div style={{display: 'flex', gap: '10px'}}>
+                                                <a href={`mailto:${inq.email}`} className="action-btn btn-email">
+                                                    ✉️ Reply
+                                                </a>
+                                                <button 
+                                                    onClick={() => handleDeleteInquiry(inq._id)} 
+                                                    className="action-btn btn-delete-icon"
+                                                    title="Delete Inquiry"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+
                 {/* 1. PRODUCTS TAB */}
                 {activeTab === 'products' && (
                     <>
