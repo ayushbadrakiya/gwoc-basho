@@ -8,12 +8,17 @@ const User = require('../models/User');
 const JWT_SECRET = "secret123";
 
 // --- NODEMAILER CONFIG ---
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: "", // <--- UPDATE THIS
-        pass: ""    // <--- UPDATE THIS
-    }
+  service: 'gmail',
+  port: 587,              // Use Port 587 (TLS) instead of 465 (SSL)
+  secure: false,
+  auth: {
+    user: EMAIL_USER,
+    pass: EMAIL_PASS 
+  }
 });
 
 // Helper to generate & send OTP

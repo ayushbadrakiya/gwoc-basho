@@ -219,6 +219,8 @@ const App = () => {
           margin-right: 20px;
           font-family: 'Cormorant Garamond', serif;
           font-style: italic;
+          align-item:center;
+          justify-content:center;
         }
 
         /* --- RESPONSIVE --- */

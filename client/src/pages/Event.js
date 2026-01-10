@@ -14,7 +14,10 @@ const palette = {
 
 const NewsSection = () => {
     const [news, setNews] = useState([]);
-    const [loading, setLoading] = useState(true); // Added loading state
+    const [loading, setLoading] = useState(true);
+    
+    // 1. STATE FOR IMAGE LIGHTBOX
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         const fetchNews = async () => {
@@ -24,7 +27,7 @@ const NewsSection = () => {
             } catch (err) { 
                 console.error("Error fetching news:", err); 
             } finally {
-                setLoading(false); // Stop loading regardless of success/fail
+                setLoading(false);
             }
         };
         fetchNews();
@@ -106,7 +109,6 @@ const NewsSection = () => {
                     animation: slideUp 0.8s ease backwards;
                 }
 
-                /* Stagger animation for cards */
                 .news-card:nth-child(1) { animation-delay: 0.1s; }
                 .news-card:nth-child(2) { animation-delay: 0.2s; }
                 .news-card:nth-child(3) { animation-delay: 0.3s; }
@@ -122,12 +124,13 @@ const NewsSection = () => {
                     height: 240px;
                     overflow: hidden;
                     position: relative;
+                    cursor: zoom-in; /* Indicates clickability */
                 }
 
                 .news-image {
                     width: 100%;
                     height: 100%;
-                    object-fit: cover;
+                    object-fit: contain;
                     transition: transform 0.6s ease;
                 }
 
@@ -147,6 +150,7 @@ const NewsSection = () => {
                     color: ${palette.flame};
                     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
                     z-index: 2;
+                    pointer-events: none; /* Allows click to pass through to wrapper */
                 }
 
                 /* --- CONTENT AREA --- */
@@ -174,48 +178,54 @@ const NewsSection = () => {
                     color: #666;
                     font-size: 0.95rem;
                     line-height: 1.7;
-                    flex: 1; /* Pushes footer down */
+                    flex: 1;
                     margin-bottom: 20px;
                     display: -webkit-box;
-                    -webkit-line-clamp: 4; /* Limit lines */
+                    -webkit-line-clamp: 4;
                     -webkit-box-orient: vertical;
                     overflow: hidden;
                 }
 
-                .read-more {
+                /* --- LIGHTBOX (FULL SCREEN) STYLES --- */
+                .lightbox-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.9);
                     display: flex;
+                    justify-content: center;
                     align-items: center;
+                    z-index: 2000;
+                    animation: fadeIn 0.3s ease;
+                    cursor: zoom-out;
+                }
+
+                .lightbox-image {
+                    max-width: 90%;
+                    max-height: 90vh;
+                    object-fit: contain;
+                    border-radius: 8px;
+                    box-shadow: 0 0 50px rgba(255,255,255,0.1);
+                    animation: scaleIn 0.3s ease;
+                    cursor: default;
+                }
+
+                .close-hint {
+                    position: absolute;
+                    bottom: 30px;
+                    color: white;
                     font-size: 0.9rem;
-                    font-weight: 600;
-                    color: ${palette.copper};
-                    text-transform: uppercase;
+                    opacity: 0.8;
                     letter-spacing: 1px;
                 }
 
-                .arrow {
-                    margin-left: 8px;
-                    transition: margin 0.3s;
-                }
-
-                .news-card:hover .arrow {
-                    margin-left: 12px;
-                }
-
                 /* --- ANIMATIONS --- */
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(40px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
                 .spinner {
                     width: 40px;
@@ -227,7 +237,6 @@ const NewsSection = () => {
                     margin: 50px auto;
                 }
 
-                /* --- RESPONSIVE --- */
                 @media (max-width: 768px) {
                     .news-grid { grid-template-columns: 1fr; }
                     .section-title { font-size: 2.2rem; }
@@ -251,10 +260,12 @@ const NewsSection = () => {
                         {news.map((item) => (
                             <div key={item._id} className="news-card">
                                 
-                                <div className="image-wrapper">
-                                    <span className="date-badge">
-                                        {formatDate(item.date)}
-                                    </span>
+                                {/* 2. CLICK HANDLER ON IMAGE WRAPPER */}
+                                <div 
+                                    className="image-wrapper" 
+                                    onClick={() => item.image && setSelectedImage(`http://localhost:5000/uploads/${item.image}`)}
+                                >
+                                    
                                     
                                     {item.image ? (
                                         <img
@@ -272,14 +283,25 @@ const NewsSection = () => {
                                 <div className="card-content">
                                     <h3 className="news-title">{item.title}</h3>
                                     <p className="news-desc">{item.description}</p>
-                                    
-                                    
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* 3. LIGHTBOX OVERLAY COMPONENT */}
+            {selectedImage && (
+                <div className="lightbox-overlay" onClick={() => setSelectedImage(null)}>
+                    <img 
+                        src={selectedImage} 
+                        alt="Full Screen" 
+                        className="lightbox-image" 
+                        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking image
+                    />
+                    <div className="close-hint">Click outside to close</div>
+                </div>
+            )}
         </div>
     );
 };

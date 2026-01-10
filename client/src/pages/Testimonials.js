@@ -14,7 +14,10 @@ const palette = {
 
 const TestimonialsSection = () => {
     const [testimonials, setTestimonials] = useState([]);
-    const [loading, setLoading] = useState(true); // Added loading state
+    const [loading, setLoading] = useState(true);
+    
+    // 1. STATE FOR LIGHTBOX (Media & Type)
+    const [selectedMedia, setSelectedMedia] = useState(null); // { url: '', type: 'image' | 'video' }
 
     useEffect(() => {
         const fetchTestimonials = async () => {
@@ -24,7 +27,7 @@ const TestimonialsSection = () => {
             } catch (err) { 
                 console.error("Error fetching testimonials:", err); 
             } finally {
-                setLoading(false); // Stop loading
+                setLoading(false);
             }
         };
         fetchTestimonials();
@@ -115,7 +118,6 @@ const TestimonialsSection = () => {
                     animation: slideUp 0.6s ease backwards;
                 }
 
-                /* Stagger Animation */
                 .test-card:nth-child(1) { animation-delay: 0.1s; }
                 .test-card:nth-child(2) { animation-delay: 0.2s; }
                 .test-card:nth-child(3) { animation-delay: 0.3s; }
@@ -131,12 +133,13 @@ const TestimonialsSection = () => {
                     overflow: hidden;
                     position: relative;
                     background: #F5F5F5;
+                    cursor: zoom-in; /* Clickable cursor */
                 }
 
                 .media-content {
                     width: 100%;
                     height: 100%;
-                    object-fit: cover;
+                    object-fit: contain;
                     transition: transform 0.6s ease;
                 }
 
@@ -230,6 +233,27 @@ const TestimonialsSection = () => {
                     animation: shimmer 1s linear infinite;
                 }
 
+                /* --- LIGHTBOX STYLES --- */
+                .lightbox-overlay {
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0, 0, 0, 0.95);
+                    display: flex; justify-content: center; align-items: center;
+                    z-index: 3000;
+                    animation: fadeIn 0.3s;
+                    cursor: zoom-out;
+                }
+                .lightbox-content {
+                    max-width: 90%;
+                    max-height: 90vh;
+                    object-fit: contain;
+                    border-radius: 4px;
+                    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+                    cursor: default;
+                }
+                .close-hint {
+                    position: absolute; bottom: 30px; color: white; opacity: 0.7; font-size: 0.9rem;
+                }
+
                 /* --- ANIMATIONS --- */
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -264,7 +288,14 @@ const TestimonialsSection = () => {
 
                                 {/* MEDIA SECTION */}
                                 {t.mediaType !== 'none' && (
-                                    <div className="media-wrapper">
+                                    // 2. Click Handler added here
+                                    <div 
+                                        className="media-wrapper" 
+                                        onClick={() => setSelectedMedia({ 
+                                            url: `http://localhost:5000/uploads/${t.media}`, 
+                                            type: t.mediaType 
+                                        })}
+                                    >
                                         {t.mediaType === 'image' ? (
                                             <img
                                                 src={`http://localhost:5000/uploads/${t.media}`}
@@ -272,7 +303,7 @@ const TestimonialsSection = () => {
                                                 className="media-content"
                                             />
                                         ) : (
-                                            <video controls className="media-content" style={{background:'#000'}}>
+                                            <video className="media-content" style={{background:'#000'}}>
                                                 <source src={`http://localhost:5000/uploads/${t.media}`} type="video/mp4" />
                                             </video>
                                         )}
@@ -281,19 +312,14 @@ const TestimonialsSection = () => {
 
                                 {/* TEXT CONTENT */}
                                 <div className="content-wrapper">
-                                    {/* Quote Icon Background for text-only cards */}
                                     {t.mediaType === 'none' && <div className="quote-icon">“</div>}
 
-                                    <p className="message-text">
-                                        "{t.message}"
-                                    </p>
+                                    <p className="message-text">"{t.message}"</p>
 
                                     <div className="author-block">
-                                        {/* Fallback Avatar based on first letter */}
                                         <div className="author-avatar">
                                             {t.name.charAt(0).toUpperCase()}
                                         </div>
-                                        
                                         <div className="author-info">
                                             <h4>{t.name}</h4>
                                             <span>{t.designation}</span>
@@ -305,6 +331,30 @@ const TestimonialsSection = () => {
                     </div>
                 )}
             </div>
+
+            {/* 3. LIGHTBOX OVERLAY */}
+            {selectedMedia && (
+                <div className="lightbox-overlay" onClick={() => setSelectedMedia(null)}>
+                    {selectedMedia.type === 'image' ? (
+                        <img 
+                            src={selectedMedia.url} 
+                            alt="Full Screen" 
+                            className="lightbox-content" 
+                            onClick={(e) => e.stopPropagation()} 
+                        />
+                    ) : (
+                        <video 
+                            controls 
+                            autoPlay 
+                            className="lightbox-content" 
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <source src={selectedMedia.url} type="video/mp4" />
+                        </video>
+                    )}
+                    <div className="close-hint">Click outside to close</div>
+                </div>
+            )}
         </div>
     );
 };

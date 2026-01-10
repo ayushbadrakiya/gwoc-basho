@@ -40,6 +40,9 @@ const Profile = () => {
     const [otp, setOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
 
+    // --- IMAGE PREVIEW STATE ---
+    const [previewImage, setPreviewImage] = useState(null);
+
     useEffect(() => {
         if (!user) { navigate('/login'); return; }
         fetchProfile();
@@ -286,6 +289,50 @@ const Profile = () => {
                     color: white;
                 }
 
+                /* --- CUSTOM ORDER DETAILS --- */
+                .custom-details-box {
+                    background: #FAFAFA;
+                    padding: 15px;
+                    border-radius: 12px;
+                    margin-top: 15px;
+                    border: 1px dashed ${palette.sand};
+                }
+                
+                .custom-label {
+                    font-size: 0.8rem;
+                    color: #888;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    font-weight: bold;
+                    display: block;
+                    margin-bottom: 5px;
+                }
+
+                .custom-text {
+                    font-size: 0.95rem;
+                    color: ${palette.deep};
+                    margin-bottom: 15px;
+                    line-height: 1.5;
+                }
+
+                .image-gallery {
+                    display: flex;
+                    gap: 10px;
+                    overflow-x: auto;
+                    padding-bottom: 5px;
+                }
+
+                .gallery-img {
+                    width: 70px;
+                    height: 70px;
+                    object-fit: cover;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    border: 1px solid #EEE;
+                    transition: transform 0.2s;
+                }
+                .gallery-img:hover { transform: scale(1.05); border-color: ${palette.copper}; }
+
                 /* --- MODAL --- */
                 .modal-overlay {
                     position: fixed;
@@ -308,6 +355,13 @@ const Profile = () => {
                     box-shadow: 0 25px 50px rgba(0,0,0,0.2);
                     animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                     text-align: center;
+                }
+
+                .preview-img-large {
+                    max-width: 100%;
+                    max-height: 80vh;
+                    border-radius: 10px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
                 }
 
                 /* --- BUTTONS & SPINNERS --- */
@@ -472,10 +526,17 @@ const Profile = () => {
                                 </div>
                             ) : (
                                 orders.map(order => {
-                                    // Helper for status styles
                                     let statusClass = 'status-processing';
                                     if (order.status === 'CANCELLED') statusClass = 'status-cancelled';
                                     else if (order.trackingStatus === 'Delivered') statusClass = 'status-delivered';
+
+                                    // Determine Image to show (Standard or First Custom Image)
+                                    let displayImage = null;
+                                    if(order.orderType === 'STANDARD' && order.productImage) {
+                                        displayImage = order.productImage;
+                                    } else if (order.orderType === 'CUSTOM' && order.customImages && order.customImages.length > 0) {
+                                        displayImage = order.customImages[0];
+                                    }
 
                                     return (
                                         <div key={order._id} className="order-card">
@@ -489,35 +550,67 @@ const Profile = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* CANCEL BUTTON LOGIC */}
+                                                {/* CANCEL BUTTON */}
                                                 {order.status !== 'CANCELLED' && order.trackingStatus !== 'Delivered' && (
-                                                    <button 
-                                                        onClick={() => initiateCancel(order)}
-                                                        className="cancel-btn"
-                                                    >
+                                                    <button onClick={() => initiateCancel(order)} className="cancel-btn">
                                                         Cancel
                                                     </button>
                                                 )}
                                             </div>
 
-                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center', background: '#FAFAFA', padding: '10px', borderRadius: '12px' }}>
-                                                {order.productImage ? (
+                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                                                {/* Thumbnail Image */}
+                                                {displayImage ? (
                                                     <img 
-                                                        src={`http://localhost:5000/uploads/${order.productImage}`} 
+                                                        src={`http://localhost:5000/uploads/${displayImage}`} 
                                                         alt="item" 
-                                                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }} 
+                                                        style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '12px', border: '1px solid #EEE' }} 
                                                     />
                                                 ) : (
-                                                    <div style={{ width: '60px', height: '60px', background: '#E0E0E0', borderRadius: '8px' }} />
+                                                    <div style={{ width: '70px', height: '70px', background: '#E0E0E0', borderRadius: '12px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.7rem', color:'#888' }}>
+                                                        No Img
+                                                    </div>
                                                 )}
                                                 
-                                                <div>
-                                                    <h4 style={{ margin: '0 0 4px 0', color: palette.deep }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <h4 style={{ margin: '0 0 4px 0', color: palette.deep, fontSize:'1.1rem' }}>
                                                         {order.orderType === 'STANDARD' ? order.productName : 'Custom Request'}
                                                     </h4>
                                                     <p style={{ margin: 0, fontSize: '0.9rem', color: palette.flame, fontWeight: '600' }}>
-                                                        ₹{order.amount}
+                                                        {order.amount > 0 ? `₹${order.amount}` : 'Quote Pending'}
                                                     </p>
+
+                                                    {/* --- CUSTOM ORDER DETAILS --- */}
+                                                    {order.orderType === 'CUSTOM' && (
+                                                        <div className="custom-details-box">
+                                                            <span className="custom-label">Description</span>
+                                                            <p className="custom-text">
+                                                                {order.description || order.customDetails?.description || "No description provided."}
+                                                            </p>
+                                                            
+                                                            <span className="custom-label">Material</span>
+                                                            <p className="custom-text">
+                                                                {order.material || order.customDetails?.material || "Not specified"}
+                                                            </p>
+
+                                                            {order.customImages && order.customImages.length > 0 && (
+                                                                <>
+                                                                    <span className="custom-label">Reference Images</span>
+                                                                    <div className="image-gallery">
+                                                                        {order.customImages.map((img, idx) => (
+                                                                            <img 
+                                                                                key={idx}
+                                                                                src={`http://localhost:5000/uploads/${img}`} 
+                                                                                alt={`ref-${idx}`}
+                                                                                className="gallery-img"
+                                                                                onClick={() => setPreviewImage(`http://localhost:5000/uploads/${img}`)}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -563,18 +656,18 @@ const Profile = () => {
 
                         <button 
                             onClick={() => setShowCancelModal(false)} 
-                            style={{ 
-                                background: 'transparent', 
-                                border: 'none', 
-                                color: '#999', 
-                                marginTop: '15px', 
-                                cursor: 'pointer',
-                                textDecoration: 'underline'
-                            }}
+                            style={{ background: 'transparent', border: 'none', color: '#999', marginTop: '15px', cursor: 'pointer', textDecoration: 'underline' }}
                         >
                             Nevermind, keep order
                         </button>
                     </div>
+                </div>
+            )}
+
+            {/* === IMAGE PREVIEW MODAL === */}
+            {previewImage && (
+                <div className="modal-overlay" onClick={() => setPreviewImage(null)}>
+                    <img src={previewImage} alt="Preview" className="preview-img-large" />
                 </div>
             )}
         </div>

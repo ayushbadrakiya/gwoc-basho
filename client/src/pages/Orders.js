@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { Search } from 'lucide-react'; 
 
 const palette = {
     deep: '#442D1C',
@@ -15,8 +16,9 @@ const palette = {
 
 const Orders = () => {
     const [products, setProducts] = useState([]);
-    const [selectedProduct, setSelectedProduct] = useState(null); // Track which product is being bought
-    const [addressForm, setAddressForm] = useState({ address: '', phone: '', city: '', zip: '' }); // Form Data
+    const [searchQuery, setSearchQuery] = useState(''); 
+    const [selectedProduct, setSelectedProduct] = useState(null); 
+    const [addressForm, setAddressForm] = useState({ address: '', phone: '', city: '', zip: '' }); 
     const user = JSON.parse(localStorage.getItem('user')); 
 
     useEffect(() => {
@@ -32,44 +34,9 @@ const Orders = () => {
         }
     };
 
-    // 1. User Clicks "Buy Now" -> Open Form
-    const initiateBuy = (product) => {
-        if (!user) {
-            alert("Please Login first!");
-            window.location.href = '/login';
-            return;
-        }
-        setSelectedProduct(product); // Show modal
-    };
-
-    // 2. User Submits Address -> Process Order
-    const confirmOrder = async (e) => {
-        e.preventDefault();
-        if(!selectedProduct) return;
-
-        try {
-            const payload = {
-                customerName: user.name,
-                email: user.email, 
-                amount: selectedProduct.price,
-                orderType: 'STANDARD',
-                productId: selectedProduct._id,
-                productName: selectedProduct.name,
-                ...addressForm // Spread address fields
-            };
-
-            const res = await axios.post('http://localhost:5000/api/buy', payload);
-            
-            if (res.data.success) {
-                alert(`Order Placed! We will ship to ${addressForm.city}.`);
-                setProducts(products.filter(p => p._id !== selectedProduct._id)); // Remove from screen
-                setSelectedProduct(null); // Close modal
-                setAddressForm({ address: '', phone: '', city: '', zip: '' }); // Reset form
-            }
-        } catch (error) {
-            alert("Order failed.");
-        }
-    };
+    const filteredProducts = products.filter(product => 
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="orders-page">
@@ -87,6 +54,7 @@ const Orders = () => {
                     text-align: center;
                     margin-bottom: 50px;
                     animation: fadeIn 0.8s ease;
+                    padding: 0 10px; /* Prevent text touching edges on mobile */
                 }
 
                 .page-title {
@@ -94,14 +62,56 @@ const Orders = () => {
                     font-size: 2.8rem;
                     color: ${palette.deep};
                     margin-bottom: 10px;
+                    line-height: 1.2;
                 }
 
                 .page-subtitle {
                     color: ${palette.ember};
                     font-size: 1.1rem;
                     opacity: 0.8;
+                    margin-bottom: 30px;
                 }
 
+                /* --- RESPONSIVE SEARCH BAR --- */
+                .search-container {
+                    max-width: 500px; /* Maximum width on desktop */
+                    width: 100%;      /* Full width on smaller screens */
+                    margin: 0 auto;
+                    position: relative;
+                    box-sizing: border-box;
+                }
+
+                .search-input {
+                    width: 100%;
+                    padding: 15px 20px 15px 50px; /* Left padding space for icon */
+                    border-radius: 30px;
+                    border: 1px solid rgba(142, 80, 34, 0.2);
+                    font-size: 1rem;
+                    outline: none;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+                    transition: all 0.3s;
+                    background: rgba(255, 255, 255, 0.8);
+                    backdrop-filter: blur(5px);
+                    box-sizing: border-box; /* Ensures padding doesn't overflow width */
+                }
+
+                .search-input:focus {
+                    background: #fff;
+                    box-shadow: 0 8px 25px rgba(142, 80, 34, 0.15);
+                    border-color: ${palette.copper};
+                }
+
+                .search-icon {
+                    position: absolute;
+                    left: 20px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: ${palette.ember};
+                    opacity: 0.6;
+                    pointer-events: none; /* Allows clicking through the icon */
+                }
+
+                /* --- GRID LAYOUT --- */
                 .orders-grid {
                     display: grid;
                     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -187,127 +197,64 @@ const Orders = () => {
                     color: ${palette.flame};
                 }
 
-                .buy-btn {
-                    background: ${palette.deep};
-                    color: white;
-                    border: none;
-                    padding: 8px 20px;
-                    border-radius: 20px;
-                    cursor: pointer;
-                    font-size: 0.9rem;
-                    font-weight: 500;
-                    transition: all 0.2s;
+                /* --- MOBILE BREAKPOINTS --- */
+                @media (max-width: 600px) {
+                    .orders-page {
+                        padding: 20px 15px; /* Reduce page padding */
+                    }
+                    .page-title {
+                        font-size: 2.2rem; /* Smaller title */
+                    }
+                    .search-container {
+                        max-width: 100%; /* Ensure full width usage */
+                    }
+                    .search-input {
+                        font-size: 0.95rem;
+                        padding: 12px 15px 12px 45px; /* Slightly tighter padding */
+                    }
+                    .search-icon {
+                        left: 15px;
+                        width: 18px;
+                        height: 18px;
+                    }
+                    .orders-grid {
+                        grid-template-columns: 1fr; /* Single column on mobile */
+                        gap: 20px;
+                    }
                 }
 
-                .buy-btn:hover {
-                    background: ${palette.ember};
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(68, 45, 28, 0.2);
-                }
-
-                /* --- MODAL STYLES --- */
-                .modal-overlay {
-                    position: fixed;
-                    top: 0; left: 0; width: 100%; height: 100%;
-                    background: rgba(68, 45, 28, 0.7);
-                    backdrop-filter: blur(4px);
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    z-index: 1000;
-                    animation: fadeIn 0.3s ease;
-                }
-
-                .modal-box {
-                    background: ${palette.white};
-                    padding: 35px;
-                    border-radius: 16px;
-                    width: 90%;
-                    max-width: 420px;
-                    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-                    border: 1px solid rgba(142, 80, 34, 0.1);
-                    animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                }
-
-                .modal-title {
-                    margin-top: 0;
-                    color: ${palette.deep};
-                    font-family: 'Playfair Display', serif;
-                    font-size: 1.5rem;
-                    text-align: center;
-                    margin-bottom: 20px;
-                }
-
-                .modal-input {
-                    width: 100%;
-                    padding: 12px 15px;
-                    margin-bottom: 15px;
-                    border: 1px solid #E0E0E0;
-                    border-radius: 8px;
-                    background: #FAFAFA;
-                    font-size: 0.95rem;
-                    box-sizing: border-box;
-                    transition: 0.3s;
-                }
-
-                .modal-input:focus {
-                    outline: none;
-                    border-color: ${palette.copper};
-                    background: #FFF;
-                    box-shadow: 0 0 0 3px rgba(142, 80, 34, 0.1);
-                }
-
-                .row-inputs {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 15px;
-                }
-
-                .modal-btn-primary {
-                    width: 100%;
-                    padding: 12px;
-                    background: ${palette.flame};
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    font-size: 1rem;
-                    font-weight: 600;
-                    margin-top: 10px;
-                    transition: 0.2s;
-                }
-                .modal-btn-primary:hover { background: ${palette.ember}; }
-
-                .modal-btn-secondary {
-                    width: 100%;
-                    padding: 12px;
-                    background: transparent;
-                    color: #888;
-                    border: none;
-                    cursor: pointer;
-                    font-size: 0.9rem;
-                    margin-top: 10px;
-                    text-decoration: underline;
-                }
-                .modal-btn-secondary:hover { color: ${palette.deep}; }
-
+                /* ANIMATIONS */
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>
 
             <div className="page-header">
                 <h2 className="page-title">Available Collections</h2>
                 <p className="page-subtitle">Unique, handcrafted pieces ready for your home.</p>
+                
+                {/* --- RESPONSIVE SEARCH BAR --- */}
+                <div className="search-container">
+                    <Search className="search-icon" size={22} />
+                    <input 
+                        type="text" 
+                        className="search-input" 
+                        placeholder="Search for pottery..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
             </div>
 
-            {products.length === 0 ? (
+            {filteredProducts.length === 0 ? (
                 <div style={{ textAlign: 'center', color: '#999', padding: '60px' }}>
-                    <h3>No products available at the moment.</h3>
+                    {searchQuery ? 
+                        <h3>No products found matching "{searchQuery}"</h3> : 
+                        <h3>No products available at the moment.</h3>
+                    }
                 </div>
             ) : (
                 <div className="orders-grid">
-                    {products.map((p, index) => (
+                    {filteredProducts.map((p, index) => (
                         <div 
                             key={p._id} 
                             className="orders-card"
@@ -341,67 +288,10 @@ const Orders = () => {
                                 
                                 <div className="card-footer">
                                     <h4 className="price-tag">₹{p.price}</h4>
-                                    
                                 </div>
                             </div>
-
                         </div>
                     ))}
-                </div>
-            )}
-
-            {/* --- SHIPPING ADDRESS MODAL --- */}
-            {selectedProduct && (
-                <div className="modal-overlay">
-                    <div className="modal-box">
-                        <h3 className="modal-title">Shipping Details</h3>
-                        <p style={{textAlign:'center', fontSize:'0.9rem', color:'#666', marginBottom:'20px'}}>
-                            For <strong>{selectedProduct.name}</strong>
-                        </p>
-                        
-                        <form onSubmit={confirmOrder}>
-                            <input 
-                                className="modal-input"
-                                required 
-                                placeholder="Street Address" 
-                                value={addressForm.address} 
-                                onChange={e=>setAddressForm({...addressForm, address: e.target.value})} 
-                            />
-                            
-                            <div className="row-inputs">
-                                <input 
-                                    className="modal-input"
-                                    required 
-                                    placeholder="City" 
-                                    value={addressForm.city} 
-                                    onChange={e=>setAddressForm({...addressForm, city: e.target.value})} 
-                                />
-                                <input 
-                                    className="modal-input"
-                                    required 
-                                    placeholder="Zip Code" 
-                                    value={addressForm.zip} 
-                                    onChange={e=>setAddressForm({...addressForm, zip: e.target.value})} 
-                                />
-                            </div>
-
-                            <input 
-                                className="modal-input"
-                                required 
-                                placeholder="Phone Number" 
-                                value={addressForm.phone} 
-                                onChange={e=>setAddressForm({...addressForm, phone: e.target.value})} 
-                            />
-                            
-                            <button type="submit" className="modal-btn-primary">
-                                Confirm Purchase - ₹{selectedProduct.price}
-                            </button>
-                            
-                            <button type="button" onClick={() => setSelectedProduct(null)} className="modal-btn-secondary">
-                                Cancel
-                            </button>
-                        </form>
-                    </div>
                 </div>
             )}
         </div>

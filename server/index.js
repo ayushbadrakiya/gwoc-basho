@@ -5,6 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const nodemailer = require('nodemailer'); // <--- Import Nodemailer
 const crypto = require('crypto');
+require('dotenv').config();
 
 
 const app = express();
@@ -31,11 +32,13 @@ app.use('/api/corporate', corporateRoutes);
 
 
 // --- EMAIL CONFIGURATION (SAME AS AUTH.JS) ---
-const EMAIL_USER = ""; //PASTE Your sender's email here
-const EMAIL_PASS = ""; // <--- PASTE YOUR APP PASSWORD HERE
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  port: 587,              // Use Port 587 (TLS) instead of 465 (SSL)
+  secure: false,
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS 
@@ -126,6 +129,10 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
     if (user.otp !== otp) {
         return res.status(400).json({ success: false, message: "Invalid OTP. Order failed." });
     }
+    let processedCustomImages = [];
+    if (req.files && req.files.length > 0) {
+        processedCustomImages = req.files.map(file => file.filename);
+    }
 
     // --- 1.5 SECURITY CHECK: VERIFY RAZORPAY PAYMENT ---
     // Only verify if it is a paid order (Standard) or amount > 0
@@ -161,14 +168,18 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
         productImage,
         orderType,
         customerName,
-        description,
-        material,
+        description: description || '',
+        material: material || '',
         phone,
         address,
         city,
         zip,
         customDetails,
-        customImages,
+        customImages: processedCustomImages,
+        customDetails: {
+            description: description || '',
+            material: material || ''
+        },
         // 👇 NEW: Save Payment ID
         paymentId: razorpay_payment_id || null, 
         status: 'PROCESSING',

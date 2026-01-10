@@ -31,7 +31,7 @@ const CustomOrders = () => {
     const [otp, setOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
 
-    // --- NEW LOADING STATES ---
+    // --- LOADING STATES ---
     const [isLoadingAddress, setIsLoadingAddress] = useState(true);
     const [isSendingOtp, setIsSendingOtp] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +43,7 @@ const CustomOrders = () => {
         }
 
         const fetchUserData = async () => {
-            setIsLoadingAddress(true); // Start loading
+            setIsLoadingAddress(true); 
             if (user && (user.id || user._id)) {
                 try {
                     const userId = user.id || user._id;
@@ -59,7 +59,7 @@ const CustomOrders = () => {
                 } catch (err) {
                     console.error("Could not auto-fill address", err);
                 } finally {
-                    setIsLoadingAddress(false); // Stop loading
+                    setIsLoadingAddress(false); 
                 }
             } else {
                 setIsLoadingAddress(false);
@@ -70,41 +70,69 @@ const CustomOrders = () => {
     }, [navigate]);
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-    const handleFileChange = (e) => setSelectedFiles(e.target.files);
+    
+    // Fix: Convert FileList to Array for easier handling
+    const handleFileChange = (e) => {
+        setSelectedFiles(Array.from(e.target.files));
+    };
 
     const handleRequestOtp = async (e) => {
         e.preventDefault();
-        setIsSendingOtp(true); // Start button loading
+        
+        // Basic Validation
+        if(!formData.description || !formData.material) {
+            alert("Please fill in the Design Description and Material.");
+            return;
+        }
+
+        setIsSendingOtp(true); 
         try {
             await axios.post('http://localhost:5000/api/auth/req-otp', { email: user.email });
             setOtpSent(true);
             alert(`OTP sent to ${user.email}`);
         } catch (err) { 
-            alert("Failed to send OTP"); 
+            alert("Failed to send OTP. Check console."); 
+            console.error(err);
         } finally {
-            setIsSendingOtp(false); // Stop button loading
+            setIsSendingOtp(false); 
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsSubmitting(true); // Start submit loading
+        setIsSubmitting(true); 
+        
         try {
             const data = new FormData();
+            
+            // 1. User & Order Info
+            data.append('userId', user.id || user._id); // Ensure ID is sent
             data.append('email', user.email);
             data.append('otp', otp);
             data.append('customerName', user.name);
             data.append('orderType', 'CUSTOM');
             data.append('amount', 0); 
-            data.append('description', formData.description);
+            
+            // 2. Custom Specifics (Crucial Fix)
+            // We pass these as a JSON string or individual fields depending on backend
+            // For now, let's append them individually so Multer/BodyParser picks them up
+            data.append('description', formData.description); 
             data.append('material', formData.material);
+            
+            // 3. Shipping Info
             data.append('address', formData.address);
             data.append('city', formData.city);
             data.append('zip', formData.zip);
             data.append('phone', formData.phone);
 
-            for (let i = 0; i < selectedFiles.length; i++) {
-                data.append('customImages', selectedFiles[i]);
+            // 4. Images (Crucial Fix: Use 'customImages' key)
+            selectedFiles.forEach((file) => {
+                data.append('customImages', file); 
+            });
+
+            // Debug: Log what we are sending
+            for (let [key, value] of data.entries()) {
+                console.log(`${key}:`, value);
             }
 
             const res = await axios.post('http://localhost:5000/api/buy', data, {
@@ -116,9 +144,10 @@ const CustomOrders = () => {
                 navigate('/my-orders');
             }
         } catch (err) {
+            console.error("Submit Error:", err.response?.data || err);
             alert(err.response?.data?.message || "Submission Failed");
         } finally {
-            setIsSubmitting(false); // Stop submit loading
+            setIsSubmitting(false); 
         }
     };
 

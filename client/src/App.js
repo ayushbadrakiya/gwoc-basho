@@ -25,7 +25,7 @@ const palette = {
     sand: '#EDD8B4',
     light: '#fff7eb',
     white: '#ffffff',
-    glass: 'rgba(255, 255, 255, 0.95)' // Light glass for nav
+    glass: 'rgba(255, 255, 255, 0.95)' 
 };
 
 const theme = {
@@ -58,7 +58,6 @@ const Navigation = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
-    // Detect Scroll for Glass Effect
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener('scroll', handleScroll);
@@ -76,16 +75,14 @@ const Navigation = () => {
     const toggleMenu = () => setIsOpen(!isOpen);
     const closeMenu = () => setIsOpen(false);
     
-    // Check active route for styling
     const isActive = (path) => location.pathname === path;
 
-    // Define colors locally to ensure the dark theme works perfectly
     const darkTheme = {
-        bg: 'rgba(26, 18, 11, 0.85)', // Deep dark brown glass
-        bgScrolled: 'rgba(26, 18, 11, 0.98)', // Almost solid dark
-        text: '#F9F3E9', // Bone/White
-        active: '#C85428', // Flame
-        accent: '#EDD8B4', // Sand
+        bg: 'rgba(26, 18, 11, 0.85)', 
+        bgScrolled: 'rgba(26, 18, 11, 0.98)', 
+        text: '#F9F3E9', 
+        active: '#C85428', 
+        accent: '#EDD8B4', 
         border: 'rgba(237, 216, 180, 0.15)'
     };
 
@@ -105,6 +102,8 @@ const Navigation = () => {
                     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                     box-shadow: ${scrolled ? '0 10px 30px rgba(0,0,0,0.3)' : '0 1px 0 rgba(255,255,255,0.05)'};
                     font-family: 'Poppins', sans-serif;
+                    width: 100%; /* Ensure full width */
+                    box-sizing: border-box; /* Include padding in width */
                 }
 
                 .nav-container {
@@ -113,6 +112,7 @@ const Navigation = () => {
                     align-items: center;
                     max-width: 1400px;
                     margin: 0 auto;
+                    width: 100%;
                 }
 
                 /* LOGO */
@@ -124,9 +124,6 @@ const Navigation = () => {
                 .brand img {
                     height: 45px;
                     transition: transform 0.3s;
-                    /* Optional: If your logo is black text, this filter makes it white. 
-                       Remove if your logo is already light. */
-                    /* filter: brightness(0) invert(1); */ 
                 }
                 .brand:hover img { transform: scale(1.05); }
 
@@ -204,7 +201,7 @@ const Navigation = () => {
                 }
                 .nav-btn-outline:hover {
                     background: ${darkTheme.accent};
-                    color: #1A1A1A; /* Dark text on light hover */
+                    color: #1A1A1A; 
                     border-color: ${darkTheme.accent};
                 }
 
@@ -229,7 +226,7 @@ const Navigation = () => {
                         top: 100%;
                         left: 0;
                         width: 100%;
-                        background: #1A120B; /* Solid Dark Brown */
+                        background: #1A120B; 
                         flex-direction: column;
                         align-items: center;
                         padding: 40px 0;
@@ -237,7 +234,6 @@ const Navigation = () => {
                         box-shadow: 0 20px 40px rgba(0,0,0,0.4);
                         border-top: 1px solid rgba(255,255,255,0.1);
                         
-                        /* Animation */
                         transform: ${isOpen ? 'translateY(0)' : 'translateY(-20px)'};
                         opacity: ${isOpen ? '1' : '0'};
                         pointer-events: ${isOpen ? 'all' : 'none'};
@@ -272,7 +268,7 @@ const Navigation = () => {
                         <Link to="/testimonials" className={`nav-link ${isActive('/testimonials') ? 'active' : ''}`} onClick={closeMenu}>Stories</Link>
                         <Link to="/studio" className={`nav-link ${isActive('/studio') ? 'active' : ''}`} onClick={closeMenu}>Studio</Link>
                         <Link to="/corporate" className={`nav-link ${isActive('/corporate') ? 'active' : ''}`} onClick={closeMenu}>Collab and Corporate</Link>
-                       
+                        
 
                         {/* Admin Link */}
                         {user && user.role === 'admin' && (
@@ -407,6 +403,26 @@ function App() {
         <Router>
             <ScrollToTop /> {/* Ensures pages start at top when navigating */}
             
+            {/* GLOBAL STYLES FOR FIXING LAYOUT ISSUES */}
+            <style>{`
+                body, html {
+                    margin: 0;
+                    padding: 0;
+                    width: 100%;
+                    max-width: 100%;
+                    overflow-x: hidden; /* Stops horizontal scrolling */
+                    box-sizing: border-box;
+                }
+                * {
+                    box-sizing: border-box;
+                }
+                .App {
+                    width: 100%;
+                    max-width: 100vw;
+                    overflow-x: hidden;
+                }
+            `}</style>
+
             <div className="App" style={{ backgroundColor: palette.light, minHeight: '100vh', fontFamily: 'Poppins, sans-serif' }}>
                 
                 <Navigation />

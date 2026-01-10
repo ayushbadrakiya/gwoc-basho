@@ -20,9 +20,11 @@ const OrderSchema = new mongoose.Schema({
 
   // Custom Order Fields
   customDetails: {
-    description: String,
-    material: String,
-  },
+        description: String,
+        material: String
+    },
+  description: { type: String, default: '' }, // <--- VITAL
+  material: { type: String, default: '' },
   // --- NEW: Array to store custom image filenames ---
   customImages: [{ type: String }], 
 
