@@ -260,6 +260,14 @@ const Profile = () => {
                     border-color: ${palette.sand};
                 }
 
+                /* HEADER: Status & Date */
+                .order-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    margin-bottom: 15px;
+                }
+
                 .status-badge {
                     padding: 6px 12px;
                     border-radius: 20px;
@@ -289,6 +297,27 @@ const Profile = () => {
                     color: white;
                 }
 
+                /* BODY: Image & Details */
+                .order-body {
+                    display: flex;
+                    gap: 15px;
+                    align-items: flex-start;
+                }
+
+                .order-thumbnail {
+                    width: 70px;
+                    height: 70px;
+                    object-fit: cover;
+                    border-radius: 12px;
+                    border: 1px solid #EEE;
+                    flex-shrink: 0; /* Prevents image from shrinking */
+                }
+
+                .order-info {
+                    flex: 1;
+                    min-width: 0; /* Important for text-overflow to work in flex */
+                }
+
                 /* --- CUSTOM ORDER DETAILS --- */
                 .custom-details-box {
                     background: #FAFAFA;
@@ -296,6 +325,8 @@ const Profile = () => {
                     border-radius: 12px;
                     margin-top: 15px;
                     border: 1px dashed ${palette.sand};
+                    width: 100%;
+                    box-sizing: border-box;
                 }
                 
                 .custom-label {
@@ -313,12 +344,13 @@ const Profile = () => {
                     color: ${palette.deep};
                     margin-bottom: 15px;
                     line-height: 1.5;
+                    word-wrap: break-word; /* Fix for long text overflow */
                 }
 
                 .image-gallery {
                     display: flex;
                     gap: 10px;
-                    overflow-x: auto;
+                    flex-wrap:wrap;
                     padding-bottom: 5px;
                 }
 
@@ -330,6 +362,7 @@ const Profile = () => {
                     cursor: pointer;
                     border: 1px solid #EEE;
                     transition: transform 0.2s;
+                    flex-shrink: 0;
                 }
                 .gallery-img:hover { transform: scale(1.05); border-color: ${palette.copper}; }
 
@@ -406,9 +439,34 @@ const Profile = () => {
                     animation: spin 0.8s linear infinite;
                 }
 
+                /* --- RESPONSIVE MEDIA QUERIES --- */
                 @media (max-width: 600px) {
-                    .row-group { grid-template-columns: 1fr; }
+                    .profile-page { padding: 20px 10px; }
                     .content-area { padding: 20px; }
+                    .row-group { grid-template-columns: 1fr; }
+                    
+                    /* STACK ORDER BODY ON MOBILE */
+                    .order-body {
+                        flex-direction: column; /* This fixes the squishing */
+                        gap: 15px;
+                    }
+                    
+                    .order-thumbnail {
+                        width: 100%;
+                        height: 150px; /* Larger image on mobile */
+                        object-fit: cover;
+                    }
+
+                    .order-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 10px;
+                    }
+                    
+                    .cancel-btn {
+                        width: 100%;
+                        text-align: center;
+                    }
                 }
             `}</style>
 
@@ -540,7 +598,8 @@ const Profile = () => {
 
                                     return (
                                         <div key={order._id} className="order-card">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                            {/* HEADER ROW */}
+                                            <div className="order-header">
                                                 <div>
                                                     <span className={`status-badge ${statusClass}`}>
                                                         {order.status === 'CANCELLED' ? 'CANCELLED' : order.trackingStatus || 'Processing'}
@@ -558,21 +617,22 @@ const Profile = () => {
                                                 )}
                                             </div>
 
-                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                                            {/* BODY ROW (Stacks on mobile via CSS) */}
+                                            <div className="order-body">
                                                 {/* Thumbnail Image */}
                                                 {displayImage ? (
                                                     <img 
                                                         src={`http://localhost:5000/uploads/${displayImage}`} 
                                                         alt="item" 
-                                                        style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '12px', border: '1px solid #EEE' }} 
+                                                        className="order-thumbnail"
                                                     />
                                                 ) : (
-                                                    <div style={{ width: '70px', height: '70px', background: '#E0E0E0', borderRadius: '12px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.7rem', color:'#888' }}>
+                                                    <div className="order-thumbnail" style={{ background: '#E0E0E0', display:'flex', alignItems:'center', justifyContent:'center', color:'#888', fontSize:'0.7rem' }}>
                                                         No Img
                                                     </div>
                                                 )}
                                                 
-                                                <div style={{ flex: 1 }}>
+                                                <div className="order-info">
                                                     <h4 style={{ margin: '0 0 4px 0', color: palette.deep, fontSize:'1.1rem' }}>
                                                         {order.orderType === 'STANDARD' ? order.productName : 'Custom Request'}
                                                     </h4>

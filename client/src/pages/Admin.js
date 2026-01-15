@@ -630,7 +630,7 @@ const Admin = () => {
                                 </div>
                                 <div className="full-width">
                                     <label style={{ display: 'block', marginBottom: '8px', color: palette.deep, fontWeight: 'bold' }}>Upload Images</label>
-                                    <input type="file" multiple onChange={handleFileChange} accept="image/*" style={{ ...styles.input, padding: '10px' }} />
+                                    <input type="file" multiple onChange={handleFileChange} accept=".jpg,.jpeg,.png" style={{ ...styles.input, padding: '10px' }} />
                                 </div>
                                 <div className="full-width">
                                     <button type="submit" style={styles.btnPrimary}>Create Product</button>
@@ -943,7 +943,7 @@ const Admin = () => {
                                 <input placeholder="Client Name" value={testForm.name} onChange={e => setTestForm({ ...testForm, name: e.target.value })} required style={styles.input} />
                                 <input placeholder="Role (e.g. Student, Buyer)" value={testForm.designation} onChange={e => setTestForm({ ...testForm, designation: e.target.value })} style={styles.input} />
                                 <div className="full-width">
-                                    <input type="file" accept="image/*,video/*" onChange={e => setTestMedia(e.target.files[0])} style={{ ...styles.input, padding: '10px' }} />
+                                    <input type="file" accept=".jpg,.jpeg,.png,video/*" onChange={e => setTestMedia(e.target.files[0])} style={{ ...styles.input, padding: '10px' }} />
                                 </div>
                                 <div className="full-width">
                                     <textarea placeholder="Client's Feedback" value={testForm.message} onChange={e => setTestForm({ ...testForm, message: e.target.value })} required style={{ ...styles.input, height: '80px' }} />

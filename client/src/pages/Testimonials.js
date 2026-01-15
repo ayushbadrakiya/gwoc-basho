@@ -317,9 +317,7 @@ const TestimonialsSection = () => {
                                     <p className="message-text">"{t.message}"</p>
 
                                     <div className="author-block">
-                                        <div className="author-avatar">
-                                            {t.name.charAt(0).toUpperCase()}
-                                        </div>
+                                        
                                         <div className="author-info">
                                             <h4>{t.name}</h4>
                                             <span>{t.designation}</span>

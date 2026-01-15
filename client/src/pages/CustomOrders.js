@@ -141,7 +141,7 @@ const CustomOrders = () => {
 
             if (res.data.success) {
                 alert("Custom Request Sent Successfully!");
-                navigate('/my-orders');
+                navigate('/orders');
             }
         } catch (err) {
             console.error("Submit Error:", err.response?.data || err);
@@ -427,7 +427,7 @@ const CustomOrders = () => {
                                 type="file" 
                                 className="file-input-hidden"
                                 multiple 
-                                accept="image/*" 
+                                accept=".jpg,.png,.jpeg" 
                                 onChange={handleFileChange} 
                                 disabled={otpSent} 
                             />

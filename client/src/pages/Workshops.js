@@ -139,6 +139,12 @@ const Workshops = () => {
                             alert("Payment successful but registration failed. Contact support.");
                         }
                     },
+                    modal: {
+                        ondismiss: function() {
+                            setIsProcessing(false); // Stop loading
+                            console.log('Payment cancelled by user');
+                        }
+                    },
                     prefill: {
                         name: user.name,
                         email: user.email,

@@ -161,6 +161,12 @@ const ProductDetails = () => {
                         alert("Payment Verified Failed: " + (err.response?.data?.message || "Error"));
                     }
                 },
+                 modal: {
+                        ondismiss: function() {
+                            setActionLoading(false); // Stop loading
+                            console.log('Payment cancelled by user');
+                        }
+                    },
                 prefill: {
                     name: user.name,
                     email: user.email,

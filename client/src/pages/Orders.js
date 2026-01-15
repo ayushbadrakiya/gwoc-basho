@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { Search } from 'lucide-react'; 
+import { Search, Filter, ArrowUpDown } from 'lucide-react'; 
 
 const palette = {
     deep: '#442D1C',
@@ -17,9 +17,9 @@ const palette = {
 const Orders = () => {
     const [products, setProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState(''); 
-    const [selectedProduct, setSelectedProduct] = useState(null); 
-    const [addressForm, setAddressForm] = useState({ address: '', phone: '', city: '', zip: '' }); 
-    const user = JSON.parse(localStorage.getItem('user')); 
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+    const [sortOrder, setSortOrder] = useState('default');
 
     useEffect(() => {
         fetchProducts();
@@ -34,9 +34,20 @@ const Orders = () => {
         }
     };
 
-    const filteredProducts = products.filter(product => 
-        product.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredProducts = products
+        .filter(product => {
+            const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const price = parseFloat(product.price);
+            const min = minPrice ? parseFloat(minPrice) : 0;
+            const max = maxPrice ? parseFloat(maxPrice) : Infinity;
+            const matchesPrice = price >= min && price <= max;
+            return matchesSearch && matchesPrice;
+        })
+        .sort((a, b) => {
+            if (sortOrder === 'asc') return a.price - b.price;
+            if (sortOrder === 'desc') return b.price - a.price;
+            return 0; 
+        });
 
     return (
         <div className="orders-page">
@@ -52,9 +63,9 @@ const Orders = () => {
 
                 .page-header {
                     text-align: center;
-                    margin-bottom: 50px;
+                    margin-bottom: 40px;
                     animation: fadeIn 0.8s ease;
-                    padding: 0 10px; /* Prevent text touching edges on mobile */
+                    padding: 0 10px;
                 }
 
                 .page-title {
@@ -72,18 +83,25 @@ const Orders = () => {
                     margin-bottom: 30px;
                 }
 
-                /* --- RESPONSIVE SEARCH BAR --- */
-                .search-container {
-                    max-width: 500px; /* Maximum width on desktop */
-                    width: 100%;      /* Full width on smaller screens */
-                    margin: 0 auto;
+                /* --- CONTROLS --- */
+                .controls-container {
+                    max-width: 900px;
+                    margin: 0 auto 50px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                    align-items: center;
+                }
+
+                .search-wrapper {
                     position: relative;
-                    box-sizing: border-box;
+                    width: 100%;
+                    max-width: 500px;
                 }
 
                 .search-input {
                     width: 100%;
-                    padding: 15px 20px 15px 50px; /* Left padding space for icon */
+                    padding: 15px 20px 15px 50px;
                     border-radius: 30px;
                     border: 1px solid rgba(142, 80, 34, 0.2);
                     font-size: 1rem;
@@ -92,7 +110,7 @@ const Orders = () => {
                     transition: all 0.3s;
                     background: rgba(255, 255, 255, 0.8);
                     backdrop-filter: blur(5px);
-                    box-sizing: border-box; /* Ensures padding doesn't overflow width */
+                    box-sizing: border-box;
                 }
 
                 .search-input:focus {
@@ -108,10 +126,63 @@ const Orders = () => {
                     transform: translateY(-50%);
                     color: ${palette.ember};
                     opacity: 0.6;
-                    pointer-events: none; /* Allows clicking through the icon */
+                    pointer-events: none;
                 }
 
-                /* --- GRID LAYOUT --- */
+                .filter-bar {
+                    display: flex;
+                    gap: 15px;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    background: rgba(255, 255, 255, 0.6);
+                    padding: 15px 25px;
+                    border-radius: 20px;
+                    border: 1px solid rgba(142, 80, 34, 0.1);
+                }
+
+                .filter-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .filter-input {
+                    padding: 10px 15px;
+                    border-radius: 12px;
+                    border: 1px solid #ddd;
+                    background: #fff;
+                    width: 100px;
+                    font-size: 0.9rem;
+                    outline: none;
+                    transition: border 0.3s;
+                }
+
+                .filter-input:focus {
+                    border-color: ${palette.copper};
+                }
+
+                .filter-select {
+                    padding: 10px 15px;
+                    border-radius: 12px;
+                    border: 1px solid #ddd;
+                    background: #fff;
+                    font-size: 0.9rem;
+                    outline: none;
+                    cursor: pointer;
+                    min-width: 160px;
+                }
+
+                .filter-label {
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    color: ${palette.deep};
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                }
+
+                /* --- GRID --- */
                 .orders-grid {
                     display: grid;
                     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -120,7 +191,7 @@ const Orders = () => {
                     margin: 0 auto;
                 }
 
-                /* --- CARD STYLING --- */
+                /* --- CARD --- */
                 .orders-card {
                     background: ${palette.white};
                     border-radius: 16px;
@@ -141,10 +212,10 @@ const Orders = () => {
                 }
 
                 .card-image-wrapper {
-                    height: 240px;
+                    height: 240px; /* Default desktop height */
                     overflow: hidden;
                     position: relative;
-                    background: #F5F5F5;
+                    background: #f0ebe5; /* Added color to see area if image is transparent/white */
                 }
 
                 .card-image {
@@ -195,35 +266,67 @@ const Orders = () => {
                     font-size: 1.3rem;
                     font-weight: 600;
                     color: ${palette.flame};
+                    margin: 0;
                 }
 
-                /* --- MOBILE BREAKPOINTS --- */
+                /* --- MOBILE BREAKPOINTS (FIXED GAPS) --- */
                 @media (max-width: 600px) {
                     .orders-page {
-                        padding: 20px 15px; /* Reduce page padding */
+                        padding: 20px 15px;
                     }
                     .page-title {
-                        font-size: 2.2rem; /* Smaller title */
+                        font-size: 2.2rem;
                     }
-                    .search-container {
-                        max-width: 100%; /* Ensure full width usage */
+                    
+                    /* --- FIX 1: Reduce Image Height --- */
+                    .card-image-wrapper {
+                        height: 180px; /* Reduced from 240px to close gap */
                     }
-                    .search-input {
-                        font-size: 0.95rem;
-                        padding: 12px 15px 12px 45px; /* Slightly tighter padding */
+
+                    /* --- FIX 2: Reduce Padding & Margins --- */
+                    .card-content {
+                        padding: 15px; /* Reduced from 20px */
                     }
-                    .search-icon {
-                        left: 15px;
-                        width: 18px;
-                        height: 18px;
+                    
+                    .product-desc {
+                        margin-bottom: 10px; /* Reduced from 20px */
                     }
+
+                    .card-footer {
+                        padding-top: 10px;
+                    }
+
+                    /* Stack Filters */
+                    .filter-bar {
+                        flex-direction: column;
+                        width: 100%;
+                        align-items: stretch;
+                        padding: 15px;
+                        gap: 15px;
+                    }
+                    
+                    .filter-group {
+                        justify-content: space-between;
+                    }
+                    
+                    .filter-input {
+                        width: 48%; 
+                    }
+                    
+                    .filter-select {
+                        width: 100%;
+                    }
+
+                    .search-wrapper {
+                        max-width: 100%;
+                    }
+
                     .orders-grid {
-                        grid-template-columns: 1fr; /* Single column on mobile */
+                        grid-template-columns: 1fr;
                         gap: 20px;
                     }
                 }
 
-                /* ANIMATIONS */
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>
@@ -232,23 +335,61 @@ const Orders = () => {
                 <h2 className="page-title">Available Collections</h2>
                 <p className="page-subtitle">Unique, handcrafted pieces ready for your home.</p>
                 
-                {/* --- RESPONSIVE SEARCH BAR --- */}
-                <div className="search-container">
-                    <Search className="search-icon" size={22} />
-                    <input 
-                        type="text" 
-                        className="search-input" 
-                        placeholder="Search for pottery..." 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                {/* --- CONTROLS CONTAINER --- */}
+                <div className="controls-container">
+                    
+                    {/* Search Bar */}
+                    <div className="search-wrapper">
+                        <Search className="search-icon" size={22} />
+                        <input 
+                            type="text" 
+                            className="search-input" 
+                            placeholder="Search for pottery..." 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Filter Bar */}
+                    <div className="filter-bar">
+                        <div className="filter-group">
+                            <span className="filter-label"><Filter size={16}/> Price:</span>
+                            <input 
+                                type="number" 
+                                className="filter-input" 
+                                placeholder="Min ₹" 
+                                value={minPrice}
+                                onChange={(e) => setMinPrice(e.target.value)}
+                            />
+                            <input 
+                                type="number" 
+                                className="filter-input" 
+                                placeholder="Max ₹" 
+                                value={maxPrice}
+                                onChange={(e) => setMaxPrice(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="filter-group" style={{flex: 1, justifyContent:'flex-end'}}>
+                            <span className="filter-label"><ArrowUpDown size={16}/> Sort By:</span>
+                            <select 
+                                className="filter-select"
+                                value={sortOrder}
+                                onChange={(e) => setSortOrder(e.target.value)}
+                            >
+                                <option value="default">Newest Arrivals</option>
+                                <option value="asc">Price: Low to High</option>
+                                <option value="desc">Price: High to Low</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {filteredProducts.length === 0 ? (
                 <div style={{ textAlign: 'center', color: '#999', padding: '60px' }}>
-                    {searchQuery ? 
-                        <h3>No products found matching "{searchQuery}"</h3> : 
+                    {searchQuery || minPrice || maxPrice ? 
+                        <h3>No products found matching your filters.</h3> : 
                         <h3>No products available at the moment.</h3>
                     }
                 </div>
@@ -261,7 +402,6 @@ const Orders = () => {
                             style={{ animationDelay: `${index * 0.1}s` }}
                         >
                             
-                            {/* --- IMAGE AREA --- */}
                             <div className="card-image-wrapper">
                                 <Link to={`/product/${p._id}`}>
                                     <img
@@ -274,7 +414,6 @@ const Orders = () => {
                                 </Link>
                             </div>
                             
-                            {/* --- CONTENT AREA --- */}
                             <div className="card-content">
                                 <Link to={`/product/${p._id}`} style={{ textDecoration: 'none' }}>
                                     <h3 className="product-name">{p.name}</h3>
