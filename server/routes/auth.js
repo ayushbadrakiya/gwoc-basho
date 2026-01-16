@@ -13,12 +13,17 @@ const EMAIL_PASS = process.env.EMAIL_PASS;
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
-  port: 587,              // Use Port 587 (TLS) instead of 465 (SSL)
-  secure: false,
   auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS 
-  }
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  // 👇 ADD THIS BLOCK
+  tls: {
+    rejectUnauthorized: false, // Helps with some SSL glitches
+    ciphers: "SSLv3"           // Older cipher support if needed
+  },
+  // 👇 THIS IS THE CRITICAL FIX FOR TIMEOUTS
+  family: 4 // Forces IPv4 connection
 });
 
 // Helper to generate & send OTP
