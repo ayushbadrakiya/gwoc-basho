@@ -36,20 +36,13 @@ const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  port:587,
-  secure: false,
+  host: "smtp-relay.brevo.com", // 👈 Brevo's specific server
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.EMAIL_USER, // Your Brevo login email
+    pass: process.env.EMAIL_PASS, // Your generated SMTP Key
   },
-  // 👇 ADD THIS BLOCK
-  tls: {
-    rejectUnauthorized: false, // Helps with some SSL glitches
-    ciphers: "SSLv3"           // Older cipher support if needed
-  },
-  // 👇 THIS IS THE CRITICAL FIX FOR TIMEOUTS
-  family: 4 // Forces IPv4 connection
 });
 
 // Helper function to send emails safely
