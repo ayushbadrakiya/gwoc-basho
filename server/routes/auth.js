@@ -12,15 +12,32 @@ const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 
 const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com", // 👈 Brevo's specific server
-  port: 587,
-  secure: false, // true for 465, false for other ports
+  host: "smtp-relay.brevo.com",
+  port: 2525, // ⚠️ CRITICAL: Port 2525 bypasses Render's firewall
+  secure: false, // Must be false for 2525
   auth: {
-    user: process.env.EMAIL_USER, // Your Brevo login email
-    pass: process.env.EMAIL_PASS, // Your generated SMTP Key
+    user: process.env.EMAIL_USER, // Your Brevo Login ID
+    pass: process.env.EMAIL_PASS, // Your Brevo SMTP Key
   },
+  tls: {
+    rejectUnauthorized: false, // Prevents SSL handshake errors
+    ciphers: "SSLv3" // Forces simpler encryption to avoid hangs
+  },
+  family: 4, // ⚠️ Forces IPv4 to prevent connection drops
+  connectionTimeout: 10000, // Fail fast if blocked (10s)
+  debug: true, // Show us exactly what happens in logs
+  logger: true 
 });
 
+// 2. Add a Verification Check on Server Start
+// This runs immediately when your server starts to test the connection
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ SMTP CONNECTION FAILED ON STARTUP:", error);
+  } else {
+    console.log("✅ SMTP SERVER IS CONNECTED AND READY ON PORT 2525");
+  }
+});
 // Helper to generate & send OTP
 const sendOtpEmail = async (user, subject) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
