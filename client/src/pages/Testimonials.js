@@ -15,17 +15,17 @@ const palette = {
 const TestimonialsSection = () => {
     const [testimonials, setTestimonials] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     // 1. STATE FOR LIGHTBOX (Media & Type)
     const [selectedMedia, setSelectedMedia] = useState(null); // { url: '', type: 'image' | 'video' }
 
     useEffect(() => {
         const fetchTestimonials = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/content/testimonials');
+                const res = await axios.get('https://gwoc-basho-1.onrender.com/api/content/testimonials');
                 setTestimonials(res.data);
-            } catch (err) { 
-                console.error("Error fetching testimonials:", err); 
+            } catch (err) {
+                console.error("Error fetching testimonials:", err);
             } finally {
                 setLoading(false);
             }
@@ -44,7 +44,7 @@ const TestimonialsSection = () => {
             </div>
         </div>
     );
-
+    const CLOUD_NAME = "dnbplr9pw";
     return (
         <div className="testimonials-section">
             <style>{`
@@ -289,22 +289,33 @@ const TestimonialsSection = () => {
                                 {/* MEDIA SECTION */}
                                 {t.mediaType !== 'none' && (
                                     // 2. Click Handler added here
-                                    <div 
-                                        className="media-wrapper" 
-                                        onClick={() => setSelectedMedia({ 
-                                            url: `http://localhost:5000/uploads/${t.media}`, 
-                                            type: t.mediaType 
+                                    <div
+                                        className="media-wrapper"
+                                        onClick={() => setSelectedMedia({
+                                            url: `${t.media}`,
+                                            type: t.mediaType
                                         })}
                                     >
                                         {t.mediaType === 'image' ? (
                                             <img
-                                                src={`http://localhost:5000/uploads/${t.media}`}
+                                                src={
+                                                    t.media.startsWith('http')
+                                                        ? t.media
+                                                        : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${t.media}`
+                                                }
                                                 alt="customer"
                                                 className="media-content"
                                             />
                                         ) : (
-                                            <video className="media-content" style={{background:'#000'}}>
-                                                <source src={`http://localhost:5000/uploads/${t.media}`} type="video/mp4" />
+                                            <video className="media-content" style={{ background: '#000' }}>
+                                                <source
+                                                    src={
+                                                        t.media.startsWith('http')
+                                                            ? t.media
+                                                            : `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/${t.media}`
+                                                    }
+                                                    type="video/mp4"
+                                                />
                                             </video>
                                         )}
                                     </div>
@@ -317,7 +328,7 @@ const TestimonialsSection = () => {
                                     <p className="message-text">"{t.message}"</p>
 
                                     <div className="author-block">
-                                        
+
                                         <div className="author-info">
                                             <h4>{t.name}</h4>
                                             <span>{t.designation}</span>
@@ -334,17 +345,21 @@ const TestimonialsSection = () => {
             {selectedMedia && (
                 <div className="lightbox-overlay" onClick={() => setSelectedMedia(null)}>
                     {selectedMedia.type === 'image' ? (
-                        <img 
-                            src={selectedMedia.url} 
-                            alt="Full Screen" 
-                            className="lightbox-content" 
-                            onClick={(e) => e.stopPropagation()} 
+                        <img
+                            src={
+                                selectedMedia.url.startsWith('http')
+                                    ? selectedMedia.url
+                                    : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${selectedMedia.url}`
+                            }
+                            alt="Full Screen"
+                            className="lightbox-content"
+                            onClick={(e) => e.stopPropagation()}
                         />
                     ) : (
-                        <video 
-                            controls 
-                            autoPlay 
-                            className="lightbox-content" 
+                        <video
+                            controls
+                            autoPlay
+                            className="lightbox-content"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <source src={selectedMedia.url} type="video/mp4" />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { Search, Filter, ArrowUpDown } from 'lucide-react'; 
+import { Search, Filter, ArrowUpDown } from 'lucide-react';
 
 const palette = {
     deep: '#442D1C',
@@ -16,7 +16,7 @@ const palette = {
 
 const Orders = () => {
     const [products, setProducts] = useState([]);
-    const [searchQuery, setSearchQuery] = useState(''); 
+    const [searchQuery, setSearchQuery] = useState('');
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
     const [sortOrder, setSortOrder] = useState('default');
@@ -27,7 +27,7 @@ const Orders = () => {
 
     const fetchProducts = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/products');
+            const res = await axios.get('https://gwoc-basho-1.onrender.com/api/products');
             setProducts(res.data);
         } catch (err) {
             console.error(err);
@@ -46,7 +46,7 @@ const Orders = () => {
         .sort((a, b) => {
             if (sortOrder === 'asc') return a.price - b.price;
             if (sortOrder === 'desc') return b.price - a.price;
-            return 0; 
+            return 0;
         });
 
     return (
@@ -334,17 +334,17 @@ const Orders = () => {
             <div className="page-header">
                 <h2 className="page-title">Available Collections</h2>
                 <p className="page-subtitle">Unique, handcrafted pieces ready for your home.</p>
-                
+
                 {/* --- CONTROLS CONTAINER --- */}
                 <div className="controls-container">
-                    
+
                     {/* Search Bar */}
                     <div className="search-wrapper">
                         <Search className="search-icon" size={22} />
-                        <input 
-                            type="text" 
-                            className="search-input" 
-                            placeholder="Search for pottery..." 
+                        <input
+                            type="text"
+                            className="search-input"
+                            placeholder="Search for pottery..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -353,26 +353,26 @@ const Orders = () => {
                     {/* Filter Bar */}
                     <div className="filter-bar">
                         <div className="filter-group">
-                            <span className="filter-label"><Filter size={16}/> Price:</span>
-                            <input 
-                                type="number" 
-                                className="filter-input" 
-                                placeholder="Min ₹" 
+                            <span className="filter-label"><Filter size={16} /> Price:</span>
+                            <input
+                                type="number"
+                                className="filter-input"
+                                placeholder="Min ₹"
                                 value={minPrice}
                                 onChange={(e) => setMinPrice(e.target.value)}
                             />
-                            <input 
-                                type="number" 
-                                className="filter-input" 
-                                placeholder="Max ₹" 
+                            <input
+                                type="number"
+                                className="filter-input"
+                                placeholder="Max ₹"
                                 value={maxPrice}
                                 onChange={(e) => setMaxPrice(e.target.value)}
                             />
                         </div>
 
-                        <div className="filter-group" style={{flex: 1, justifyContent:'flex-end'}}>
-                            <span className="filter-label"><ArrowUpDown size={16}/> Sort By:</span>
-                            <select 
+                        <div className="filter-group" style={{ flex: 1, justifyContent: 'flex-end' }}>
+                            <span className="filter-label"><ArrowUpDown size={16} /> Sort By:</span>
+                            <select
                                 className="filter-select"
                                 value={sortOrder}
                                 onChange={(e) => setSortOrder(e.target.value)}
@@ -388,43 +388,47 @@ const Orders = () => {
 
             {filteredProducts.length === 0 ? (
                 <div style={{ textAlign: 'center', color: '#999', padding: '60px' }}>
-                    {searchQuery || minPrice || maxPrice ? 
-                        <h3>No products found matching your filters.</h3> : 
+                    {searchQuery || minPrice || maxPrice ?
+                        <h3>No products found matching your filters.</h3> :
                         <h3>No products available at the moment.</h3>
                     }
                 </div>
             ) : (
                 <div className="orders-grid">
                     {filteredProducts.map((p, index) => (
-                        <div 
-                            key={p._id} 
+                        <div
+                            key={p._id}
                             className="orders-card"
                             style={{ animationDelay: `${index * 0.1}s` }}
                         >
-                            
+                            {/* const CLOUD_NAME = "dnbplr9pw"; */}
                             <div className="card-image-wrapper">
                                 <Link to={`/product/${p._id}`}>
                                     <img
-                                        src={p.images && p.images.length > 0 
-                                            ? `http://localhost:5000/uploads/${p.images[0]}` 
-                                            : (p.image || 'https://via.placeholder.com/300x300?text=No+Image')} 
-                                        alt={p.name} 
+                                        src={
+                                            p.images && p.images.length > 0
+                                                ? (p.images[0].startsWith('http')
+                                                    ? p.images[0]
+                                                    : `https://res.cloudinary.com/dnbplr9pw/image/upload/${p.images[0]}`)
+                                                : (p.image || 'https://via.placeholder.com/300x300?text=No+Image')
+                                        }
+                                        alt={p.name}
                                         className="card-image"
                                     />
                                 </Link>
                             </div>
-                            
+
                             <div className="card-content">
                                 <Link to={`/product/${p._id}`} style={{ textDecoration: 'none' }}>
                                     <h3 className="product-name">{p.name}</h3>
                                 </Link>
-                                
+
                                 <p className="product-desc">
                                     {p.description ? (
                                         p.description.length > 80 ? p.description.substring(0, 80) + "..." : p.description
                                     ) : "A beautiful handcrafted piece."}
                                 </p>
-                                
+
                                 <div className="card-footer">
                                     <h4 className="price-tag">₹{p.price}</h4>
                                 </div>

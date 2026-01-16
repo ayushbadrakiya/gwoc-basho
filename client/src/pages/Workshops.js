@@ -17,14 +17,14 @@ const palette = {
 
 const Workshops = () => {
     const [workshops, setWorkshops] = useState([]);
-    const [myBookings, setMyBookings] = useState([]); 
-    const [selectedWorkshop, setSelectedWorkshop] = useState(null); 
+    const [myBookings, setMyBookings] = useState([]);
+    const [selectedWorkshop, setSelectedWorkshop] = useState(null);
     const [formDetails, setFormDetails] = useState({ phone: '', experience: 'Beginner' });
     const [phoneError, setPhoneError] = useState('');
-    
+
     // Loading State for Booking Process
     const [isProcessing, setIsProcessing] = useState(false);
-    
+
     // State for Image Preview
     const [previewImage, setPreviewImage] = useState(null);
 
@@ -38,14 +38,14 @@ const Workshops = () => {
 
     const fetchWorkshops = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/workshops');
+            const res = await axios.get('https://gwoc-basho-1.onrender.com/api/workshops');
             setWorkshops(res.data);
         } catch (err) { console.error(err); }
     };
 
     const fetchMyRegistrations = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/workshops/my-registrations/${user.id}`);
+            const res = await axios.get(`https://gwoc-basho-1.onrender.com/api/workshops/my-registrations/${user.id}`);
             const bookedIds = res.data.map(r => r.workshopId);
             setMyBookings(bookedIds);
         } catch (err) { console.error("Error fetching bookings", err); }
@@ -65,7 +65,7 @@ const Workshops = () => {
     // --- ACTIONS ---
     const initiateBooking = (ws) => {
         if (!user) return navigate('/login');
-        setSelectedWorkshop(ws); 
+        setSelectedWorkshop(ws);
         setFormDetails({ phone: '', experience: 'Beginner' });
         setPhoneError('');
     };
@@ -80,7 +80,7 @@ const Workshops = () => {
     // --- CORE BOOKING LOGIC ---
     const handleConfirmBooking = async (e) => {
         e.preventDefault();
-        
+
         // 1. Validate Phone
         const phoneRegex = /^\d{10}$/;
         if (!phoneRegex.test(formDetails.phone)) {
@@ -96,7 +96,7 @@ const Workshops = () => {
 
             if (isPaid) {
                 // === PAID FLOW (RAZORPAY) ===
-                
+
                 // 1. Load Script
                 const res = await loadRazorpay();
                 if (!res) {
@@ -106,7 +106,7 @@ const Workshops = () => {
                 }
 
                 // 2. Create Order on Backend
-                const orderData = await axios.post('http://localhost:5000/api/payment/create-workshop-order', {
+                const orderData = await axios.post('https://gwoc-basho-1.onrender.com/api/payment/create-workshop-order', {
                     amount: selectedWorkshop.price,
                     workshopId: selectedWorkshop._id
                 });
@@ -127,7 +127,7 @@ const Workshops = () => {
                     name: "Basho Pottery",
                     description: `Booking: ${selectedWorkshop.title}`,
                     order_id: order.id,
-                    
+
                     // 4. Handler on Success
                     handler: async function (response) {
                         try {
@@ -140,7 +140,7 @@ const Workshops = () => {
                         }
                     },
                     modal: {
-                        ondismiss: function() {
+                        ondismiss: function () {
                             setIsProcessing(false); // Stop loading
                             console.log('Payment cancelled by user');
                         }
@@ -157,7 +157,7 @@ const Workshops = () => {
 
                 const paymentObject = new window.Razorpay(options);
                 paymentObject.open();
-                paymentObject.on('payment.failed', function (response){
+                paymentObject.on('payment.failed', function (response) {
                     alert("Payment Failed: " + response.error.description);
                     setIsProcessing(false);
                 });
@@ -177,7 +177,7 @@ const Workshops = () => {
     // Shared function to save to DB (called by Free flow OR Razorpay Success)
     const registerUser = async (paymentData) => {
         try {
-            const res = await axios.post('http://localhost:5000/api/workshops/register', {
+            const res = await axios.post('https://gwoc-basho-1.onrender.com/api/workshops/register', {
                 userId: user.id,
                 userName: user.name,
                 userEmail: user.email,
@@ -190,8 +190,8 @@ const Workshops = () => {
             if (res.data.success) {
                 alert(`Success! Confirmed for ${selectedWorkshop.title}`);
                 setSelectedWorkshop(null);
-                fetchWorkshops(); 
-                fetchMyRegistrations(); 
+                fetchWorkshops();
+                fetchMyRegistrations();
             }
         } catch (err) {
             alert(err.response?.data?.msg || "Error completing registration");
@@ -204,7 +204,7 @@ const Workshops = () => {
         if (!window.confirm(`Are you sure you want to cancel your spot for ${ws.title}? Refund policies may apply.`)) return;
 
         try {
-            const res = await axios.post('http://localhost:5000/api/workshops/cancel', {
+            const res = await axios.post('https://gwoc-basho-1.onrender.com/api/workshops/cancel', {
                 userId: user.id,
                 workshopId: ws._id
             });
@@ -218,6 +218,7 @@ const Workshops = () => {
             alert(err.response?.data?.msg || "Error cancelling");
         }
     };
+    const CLOUD_NAME = "dnbplr9pw";
 
     return (
         <div className="workshops-page">
@@ -348,10 +349,10 @@ const Workshops = () => {
             <div className="header-container">
                 <h1 className="main-title">Artisan Workshops</h1>
                 <p className="subtitle">Join us to craft, mold, and create.</p>
-                
+
                 <div className="legend">
-                    <div className="legend-item"><div className="dot" style={{background: palette.deep}}></div>Group Session</div>
-                    <div className="legend-item"><div className="dot" style={{background: palette.copper}}></div>1-on-1 Masterclass</div>
+                    <div className="legend-item"><div className="dot" style={{ background: palette.deep }}></div>Group Session</div>
+                    <div className="legend-item"><div className="dot" style={{ background: palette.copper }}></div>1-on-1 Masterclass</div>
                 </div>
             </div>
 
@@ -364,8 +365,16 @@ const Workshops = () => {
 
                     return (
                         <div key={ws._id} className={`ws-card ${isOneOnOne ? 'one-on-one' : ''}`}>
-                            
-                            <div className="image-container" onClick={() => setPreviewImage(ws.image ? `http://localhost:5000/uploads/${ws.image}` : null)}>
+
+                            {/* Ensure CLOUD_NAME is defined at the top of your file */}
+                            <div
+                                className="image-container"
+                                onClick={() => setPreviewImage(
+                                    ws.image
+                                        ? (ws.image.startsWith('http') ? ws.image : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${ws.image}`)
+                                        : null
+                                )}
+                            >
                                 <span className="badge badge-type">
                                     {isOneOnOne ? '✦ Masterclass' : 'Group Session'}
                                 </span>
@@ -376,10 +385,14 @@ const Workshops = () => {
                                 <span className="badge-price">{displayPrice}</span>
 
                                 {ws.image ? (
-                                    <img 
-                                        src={`http://localhost:5000/uploads/${ws.image}`} 
-                                        alt={ws.title} 
-                                        className="ws-image" 
+                                    <img
+                                        src={
+                                            ws.image.startsWith('http')
+                                                ? ws.image
+                                                : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${ws.image}`
+                                        }
+                                        alt={ws.title}
+                                        className="ws-image"
                                         title="Click to view full screen"
                                     />
                                 ) : (
@@ -393,14 +406,14 @@ const Workshops = () => {
                                 <div className="date-tag">
                                     {new Date(ws.date).toLocaleString('en-IN', { month: 'short', day: 'numeric' })} • {new Date(ws.date).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                                 </div>
-                                
+
                                 <h3 className="ws-title">{ws.title}</h3>
                                 <p className="ws-desc">
                                     {ws.description.length > 100 ? ws.description.substring(0, 100) + '...' : ws.description}
                                 </p>
-                                
+
                                 <div className="seats-info">
-                                    <span style={{color: '#666'}}>Availability</span>
+                                    <span style={{ color: '#666' }}>Availability</span>
                                     <span style={{ color: isFull ? palette.flame : 'green' }}>
                                         {isFull ? 'Sold Out' : `${ws.seats} Spots Left`}
                                     </span>
@@ -411,7 +424,7 @@ const Workshops = () => {
                                         Cancel Registration
                                     </button>
                                 ) : (
-                                    <button 
+                                    <button
                                         onClick={() => initiateBooking(ws)}
                                         disabled={isFull}
                                         className="action-btn btn-book"
@@ -438,38 +451,38 @@ const Workshops = () => {
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <h2 style={{ color: palette.deep, marginTop: 0, fontFamily: 'Playfair Display, serif' }}>Confirm Booking</h2>
-                        <p style={{color: '#666', marginBottom: '10px'}}>
+                        <p style={{ color: '#666', marginBottom: '10px' }}>
                             You are registering for <strong>{selectedWorkshop.title}</strong>
                         </p>
-                        
+
                         {/* Show Total Amount in Modal */}
                         <div style={{ background: '#f9f9f9', padding: '10px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center', border: '1px dashed #ccc' }}>
-                            <span style={{ color: '#555', fontSize: '0.9rem' }}>Total Amount</span><br/>
+                            <span style={{ color: '#555', fontSize: '0.9rem' }}>Total Amount</span><br />
                             <strong style={{ fontSize: '1.2rem', color: palette.flame }}>
                                 {selectedWorkshop.price > 0 ? `₹${selectedWorkshop.price}` : 'Free'}
                             </strong>
                         </div>
 
                         <form onSubmit={handleConfirmBooking} noValidate>
-                            
+
                             <label style={{ fontSize: '0.9rem', fontWeight: '600', color: palette.deep }}>Phone Number</label>
-                            <input 
+                            <input
                                 className={`modal-input ${phoneError ? 'input-error' : ''}`}
-                                required 
+                                required
                                 type="tel"
                                 placeholder="+91 98765 43210"
                                 maxLength={10}
-                                value={formDetails.phone} 
+                                value={formDetails.phone}
                                 onChange={handlePhoneChange}
                                 disabled={isProcessing}
                             />
                             {phoneError && <span className="error-msg">{phoneError}</span>}
 
                             <label style={{ fontSize: '0.9rem', fontWeight: '600', color: palette.deep }}>Experience Level</label>
-                            <select 
+                            <select
                                 className="modal-input"
-                                value={formDetails.experience} 
-                                onChange={e => setFormDetails({...formDetails, experience: e.target.value})}
+                                value={formDetails.experience}
+                                onChange={e => setFormDetails({ ...formDetails, experience: e.target.value })}
                                 disabled={isProcessing}
                             >
                                 <option value="Beginner">🌱 Beginner (First time)</option>

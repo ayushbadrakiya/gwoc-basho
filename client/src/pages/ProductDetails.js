@@ -39,7 +39,7 @@ const ProductDetails = () => {
         const fetchData = async () => {
             try {
                 // 1. Fetch Product
-                const productRes = await axios.get(`http://localhost:5000/api/products/${id}`);
+                const productRes = await axios.get(`https://gwoc-basho-1.onrender.com/api/products/${id}`);
                 setProduct(productRes.data);
                 if (productRes.data.images && productRes.data.images.length > 0) {
                     setMainImage(productRes.data.images[0]);
@@ -48,7 +48,7 @@ const ProductDetails = () => {
                 // 2. Fetch User Address (if logged in)
                 if (user && (user.id || user._id)) {
                     const userId = user.id || user._id;
-                    const userRes = await axios.get(`http://localhost:5000/api/auth/profile/${userId}`);
+                    const userRes = await axios.get(`https://gwoc-basho-1.onrender.com/api/auth/profile/${userId}`);
                     setAddressForm({
                         address: userRes.data.address || '',
                         city: userRes.data.city || '',
@@ -60,7 +60,7 @@ const ProductDetails = () => {
                 console.error(err);
             } finally {
                 // Stop loading animation
-                setTimeout(() => setPageLoading(false), 500); 
+                setTimeout(() => setPageLoading(false), 500);
             }
         };
 
@@ -80,11 +80,11 @@ const ProductDetails = () => {
         e.preventDefault();
         setActionLoading(true); // Start button spinner
         try {
-            await axios.post('http://localhost:5000/api/auth/req-otp', { email: user.email });
+            await axios.post('https://gwoc-basho-1.onrender.com/api/auth/req-otp', { email: user.email });
             setOtpSent(true);
             alert("OTP sent to email for confirmation!");
-        } catch (err) { 
-            alert("Failed to send OTP"); 
+        } catch (err) {
+            alert("Failed to send OTP");
         } finally {
             setActionLoading(false); // Stop button spinner
         }
@@ -118,7 +118,7 @@ const ProductDetails = () => {
 
             // 2. Create Order on Server
             const orderPayload = { productId: product._id, amount: product.price };
-            const result = await axios.post('http://localhost:5000/api/payment/create-order', orderPayload);
+            const result = await axios.post('https://gwoc-basho-1.onrender.com/api/payment/create-order', orderPayload);
             const { amount, id: order_id, currency } = result.data;
 
             // 3. Configure Razorpay Options
@@ -151,7 +151,7 @@ const ProductDetails = () => {
                     };
 
                     try {
-                        const verifyRes = await axios.post('http://localhost:5000/api/buy', paymentData);
+                        const verifyRes = await axios.post('https://gwoc-basho-1.onrender.com/api/buy', paymentData);
                         if (verifyRes.data.success) {
                             alert("Payment Successful! Order Placed.");
                             setShowModal(false);
@@ -161,12 +161,12 @@ const ProductDetails = () => {
                         alert("Payment Verified Failed: " + (err.response?.data?.message || "Error"));
                     }
                 },
-                 modal: {
-                        ondismiss: function() {
-                            setActionLoading(false); // Stop loading
-                            console.log('Payment cancelled by user');
-                        }
-                    },
+                modal: {
+                    ondismiss: function () {
+                        setActionLoading(false); // Stop loading
+                        console.log('Payment cancelled by user');
+                    }
+                },
                 prefill: {
                     name: user.name,
                     email: user.email,
@@ -177,7 +177,7 @@ const ProductDetails = () => {
                 },
                 // Stop loading if user closes modal
                 modal: {
-                    ondismiss: function() {
+                    ondismiss: function () {
                         setActionLoading(false);
                     }
                 }
@@ -185,7 +185,7 @@ const ProductDetails = () => {
 
             const paymentObject = new window.Razorpay(options);
             paymentObject.open();
-            
+
             // Note: We don't setActionLoading(false) here immediately, 
             // we wait for the modal ondismiss or handler.
 
@@ -195,7 +195,7 @@ const ProductDetails = () => {
             setActionLoading(false);
         }
     };
-
+    const CLOUD_NAME = "dnbplr9pw";
     // --- PAGE SPINNER ---
     if (pageLoading) return (
         <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: palette.lightSand }}>
@@ -251,46 +251,53 @@ const ProductDetails = () => {
             <div className="details-layout">
                 {/* LEFT: GALLERY */}
                 <div className="details-gallery">
-                    <div style={{ border: `1px solid ${palette.copper}20`, padding: '20px', marginBottom: '15px', borderRadius: '20px', background: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-                        <img 
-                            src={mainImage ? `http://localhost:5000/uploads/${mainImage}` : (product.image || 'https://via.placeholder.com/300')} 
-                            alt="Main" 
-                            style={{ width: '100%', height: 'auto', maxHeight: '500px', objectFit: 'contain', display: 'block', borderRadius: '10px' }} 
-                        />
-                    </div>
-                    
-                    {/* THUMBNAILS */}
-                    <div className="thumbs" style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '5px' }}>
-                        {product.images && product.images.map((img, index) => (
-                            <img 
-                                key={index} 
-                                src={`http://localhost:5000/uploads/${img}`} 
-                                alt="thumb" 
-                                onClick={() => setMainImage(img)} 
-                                style={{ 
-                                    width: '80px', height: '80px', objectFit: 'cover', 
-                                    border: mainImage === img ? `2px solid ${palette.flame}` : `2px solid transparent`, 
-                                    cursor: 'pointer', borderRadius: '12px', flexShrink: 0,
-                                    transition: 'all 0.2s',
-                                    opacity: mainImage === img ? 1 : 0.7
-                                }} 
-                            />
-                        ))}
-                    </div>
-                </div>
+    {/* MAIN IMAGE */}
+    <div style={{ border: `1px solid ${palette.copper}20`, padding: '20px', marginBottom: '15px', borderRadius: '20px', background: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
+        <img
+            src={
+                mainImage 
+                ? (mainImage.startsWith('http') ? mainImage : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${mainImage}`)
+                : (product.image 
+                    ? (product.image.startsWith('http') ? product.image : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${product.image}`) 
+                    : 'https://via.placeholder.com/300')
+            }
+            alt="Main"
+            style={{ width: '100%', height: 'auto', maxHeight: '500px', objectFit: 'contain', display: 'block', borderRadius: '10px' }}
+        />
+    </div>
+
+    {/* THUMBNAILS */}
+    <div className="thumbs" style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '5px' }}>
+        {product.images && product.images.map((img, index) => (
+            <img
+                key={index}
+                src={img.startsWith('http') ? img : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${img}`}
+                alt="thumb"
+                onClick={() => setMainImage(img)}
+                style={{
+                    width: '80px', height: '80px', objectFit: 'cover',
+                    border: mainImage === img ? `2px solid ${palette.flame}` : `2px solid transparent`,
+                    cursor: 'pointer', borderRadius: '12px', flexShrink: 0,
+                    transition: 'all 0.2s',
+                    opacity: mainImage === img ? 1 : 0.7
+                }}
+            />
+        ))}
+    </div>
+</div>
 
                 {/* RIGHT: INFO */}
                 <div className="details-info">
                     <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '3rem', marginTop: 0, marginBottom: '10px', color: palette.deep, lineHeight: 1.1 }}>
                         {product.name}
                     </h1>
-                    
+
                     <div style={{ width: '60px', height: '4px', background: palette.flame, marginBottom: '20px', borderRadius: '2px' }}></div>
 
                     <p style={{ fontSize: '1.1rem', color: '#555', lineHeight: '1.8', whiteSpace: 'pre-line', marginBottom: '30px' }}>
                         {product.description}
                     </p>
-                    
+
                     <div style={{ background: 'white', padding: '20px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 5px 15px rgba(0,0,0,0.05)' }}>
                         <div>
                             <span style={{ display: 'block', fontSize: '0.9rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Price</span>
@@ -310,7 +317,7 @@ const ProductDetails = () => {
                         <h3 style={{ fontFamily: 'Playfair Display, serif', marginTop: 0, textAlign: 'center', color: palette.deep, fontSize: '1.8rem' }}>
                             Shipping Details
                         </h3>
-                        
+
                         <div style={{ textAlign: 'right', marginBottom: '15px' }}>
                             <button onClick={() => navigate('/profile')} style={{ background: 'none', border: 'none', ...styles.changeAddressLink }}>
                                 Update Saved Address ➜
@@ -319,12 +326,12 @@ const ProductDetails = () => {
 
                         <form onSubmit={otpSent ? confirmOrder : requestOtp} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             <input required placeholder="Street Address" value={addressForm.address} onChange={e => setAddressForm({ ...addressForm, address: e.target.value })} style={styles.input} disabled={otpSent || actionLoading} />
-                            
+
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <input required placeholder="City" value={addressForm.city} onChange={e => setAddressForm({ ...addressForm, city: e.target.value })} style={styles.input} disabled={otpSent || actionLoading} />
                                 <input required placeholder="Zip Code" value={addressForm.zip} onChange={e => setAddressForm({ ...addressForm, zip: e.target.value })} style={styles.input} disabled={otpSent || actionLoading} />
                             </div>
-                            
+
                             <input required placeholder="Phone Number" value={addressForm.phone} onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })} style={styles.input} disabled={otpSent || actionLoading} />
 
                             {otpSent && (
@@ -332,36 +339,36 @@ const ProductDetails = () => {
                                     <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: palette.ember }}>
                                         Enter OTP sent to <strong>{user.email}</strong>
                                     </p>
-                                    <input 
-                                        placeholder="• • • • • •" 
-                                        value={otp} 
-                                        onChange={e => setOtp(e.target.value)} 
-                                        required 
-                                        style={{ ...styles.input, textAlign: 'center', fontWeight: 'bold', letterSpacing: '4px', fontSize: '1.2rem', width: '80%', margin: '0 auto', display: 'block' }} 
+                                    <input
+                                        placeholder="• • • • • •"
+                                        value={otp}
+                                        onChange={e => setOtp(e.target.value)}
+                                        required
+                                        style={{ ...styles.input, textAlign: 'center', fontWeight: 'bold', letterSpacing: '4px', fontSize: '1.2rem', width: '80%', margin: '0 auto', display: 'block' }}
                                         disabled={actionLoading}
                                     />
                                 </div>
                             )}
 
                             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                                <button 
-                                    type="button" 
-                                    onClick={() => setShowModal(false)} 
+                                <button
+                                    type="button"
+                                    onClick={() => setShowModal(false)}
                                     disabled={actionLoading}
                                     style={{ flex: 1, background: 'transparent', color: '#888', padding: '12px', border: '1px solid #ddd', borderRadius: '10px', cursor: 'pointer', fontWeight: '600' }}
                                 >
                                     Cancel
                                 </button>
-                                
-                                <button 
-                                    type="submit" 
+
+                                <button
+                                    type="submit"
                                     disabled={actionLoading}
-                                    style={{ 
-                                        flex: 1, 
-                                        background: otpSent ? palette.flame : palette.deep, 
-                                        color: 'white', padding: '12px', border: 'none', borderRadius: '10px', 
-                                        cursor: actionLoading ? 'not-allowed' : 'pointer', 
-                                        fontWeight: 'bold', fontSize: '1rem', 
+                                    style={{
+                                        flex: 1,
+                                        background: otpSent ? palette.flame : palette.deep,
+                                        color: 'white', padding: '12px', border: 'none', borderRadius: '10px',
+                                        cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                        fontWeight: 'bold', fontSize: '1rem',
                                         boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
                                         display: 'flex', justifyContent: 'center', alignItems: 'center'
                                     }}

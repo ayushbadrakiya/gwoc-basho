@@ -47,7 +47,7 @@ const CustomOrders = () => {
             if (user && (user.id || user._id)) {
                 try {
                     const userId = user.id || user._id;
-                    const res = await axios.get(`http://localhost:5000/api/auth/profile/${userId}`);
+                    const res = await axios.get(`https://gwoc-basho-1.onrender.com/api/auth/profile/${userId}`);
                     
                     setFormData(prev => ({
                         ...prev,
@@ -87,7 +87,7 @@ const CustomOrders = () => {
 
         setIsSendingOtp(true); 
         try {
-            await axios.post('http://localhost:5000/api/auth/req-otp', { email: user.email });
+            await axios.post('https://gwoc-basho-1.onrender.com/api/auth/req-otp', { email: user.email });
             setOtpSent(true);
             alert(`OTP sent to ${user.email}`);
         } catch (err) { 
@@ -135,7 +135,7 @@ const CustomOrders = () => {
                 console.log(`${key}:`, value);
             }
 
-            const res = await axios.post('http://localhost:5000/api/buy', data, {
+            const res = await axios.post('https://gwoc-basho-1.onrender.com/api/buy', data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 

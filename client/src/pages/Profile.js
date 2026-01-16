@@ -19,14 +19,14 @@ const palette = {
 const Profile = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
-    
+
     // --- TABS & DATA STATE ---
     const [activeTab, setActiveTab] = useState('profile');
     const [formData, setFormData] = useState({
         name: '', email: '', phone: '', address: '', city: '', zip: ''
     });
     const [orders, setOrders] = useState([]);
-    
+
     // Loading States
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [loadingOrders, setLoadingOrders] = useState(false);
@@ -52,7 +52,7 @@ const Profile = () => {
     const fetchProfile = async () => {
         setLoadingProfile(true);
         try {
-            const res = await axios.get(`http://localhost:5000/api/auth/profile/${user.id || user._id}`);
+            const res = await axios.get(`https://gwoc-basho-1.onrender.com/api/auth/profile/${user.id || user._id}`);
             setFormData({
                 name: res.data.name || '',
                 email: res.data.email || '',
@@ -68,7 +68,7 @@ const Profile = () => {
     const fetchOrders = async () => {
         setLoadingOrders(true);
         try {
-            const res = await axios.get(`http://localhost:5000/api/orders/user/${user.id}?email=${user.email}`);
+            const res = await axios.get(`https://gwoc-basho-1.onrender.com/api/orders/user/${user.id}?email=${user.email}`);
             setOrders(res.data);
         } catch (err) { console.error(err); }
         setLoadingOrders(false);
@@ -78,7 +78,7 @@ const Profile = () => {
         e.preventDefault();
         setIsUpdating(true);
         try {
-            const res = await axios.put('http://localhost:5000/api/auth/profile/update', {
+            const res = await axios.put('https://gwoc-basho-1.onrender.com/api/auth/profile/update', {
                 userId: user.id || user._id,
                 ...formData
             });
@@ -102,27 +102,27 @@ const Profile = () => {
     const requestCancelOtp = async () => {
         setIsSendingOtp(true);
         try {
-            await axios.post('http://localhost:5000/api/auth/req-otp', { email: user.email });
+            await axios.post('https://gwoc-basho-1.onrender.com/api/auth/req-otp', { email: user.email });
             setOtpSent(true);
             alert(`OTP sent to ${user.email}`);
         } catch (err) { alert("Failed to send OTP"); }
         setIsSendingOtp(false);
     };
-
+    const CLOUD_NAME = "dnbplr9pw";
     const confirmCancel = async () => {
         setIsCancelling(true);
         try {
-            const url = `http://localhost:5000/api/orders/${selectedOrder._id}/cancel`;
+            const url = `https://gwoc-basho-1.onrender.com/api/orders/${selectedOrder._id}/cancel`;
             const res = await axios.post(url, {
                 email: user.email,
                 otp: otp,
-                isAdmin: false 
+                isAdmin: false
             });
 
             if (res.data.success || res.status === 200) {
                 alert("Order Cancelled Successfully");
                 setShowCancelModal(false);
-                fetchOrders(); 
+                fetchOrders();
             }
         } catch (err) {
             alert(err.response?.data?.message || "Cancellation Failed");
@@ -473,14 +473,14 @@ const Profile = () => {
             <div className="container">
                 {/* TABS HEADER */}
                 <div className="tab-header">
-                    <div 
-                        className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`} 
+                    <div
+                        className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
                         onClick={() => setActiveTab('profile')}
                     >
                         👤 Profile Settings
                     </div>
-                    <div 
-                        className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`} 
+                    <div
+                        className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
                         onClick={() => setActiveTab('orders')}
                     >
                         📦 My Orders
@@ -493,70 +493,70 @@ const Profile = () => {
                         <div style={{ animation: 'fadeIn 0.5s' }}>
                             <form onSubmit={handleUpdate}>
                                 <h3 className="section-title">Account Details</h3>
-                                
+
                                 <div className="input-group">
                                     <label className="modern-label">Full Name</label>
-                                    <input 
-                                        className="modern-input" 
-                                        name="name" 
-                                        value={formData.name} 
-                                        onChange={e => setFormData({...formData, name: e.target.value})} 
+                                    <input
+                                        className="modern-input"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
                                         disabled={loadingProfile}
                                     />
                                 </div>
-                                
+
                                 <div className="input-group">
                                     <label className="modern-label">Email Address</label>
-                                    <input 
-                                        className="modern-input" 
-                                        name="email" 
-                                        value={formData.email} 
-                                        disabled 
+                                    <input
+                                        className="modern-input"
+                                        name="email"
+                                        value={formData.email}
+                                        disabled
                                     />
                                 </div>
 
                                 <h3 className="section-title" style={{ marginTop: '30px' }}>Shipping Information</h3>
-                                
+
                                 <div className="input-group">
                                     <label className="modern-label">Phone Number</label>
-                                    <input 
-                                        className="modern-input" 
-                                        name="phone" 
-                                        value={formData.phone} 
-                                        onChange={e => setFormData({...formData, phone: e.target.value})} 
+                                    <input
+                                        className="modern-input"
+                                        name="phone"
+                                        value={formData.phone}
+                                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
                                     />
                                 </div>
-                                
+
                                 <div className="input-group">
                                     <label className="modern-label">Street Address</label>
-                                    <textarea 
-                                        className="modern-input" 
-                                        name="address" 
-                                        value={formData.address} 
-                                        onChange={e => setFormData({...formData, address: e.target.value})} 
+                                    <textarea
+                                        className="modern-input"
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={e => setFormData({ ...formData, address: e.target.value })}
                                         style={{ height: '80px', resize: 'vertical' }}
                                     />
                                 </div>
-                                
+
                                 <div className="row-group">
                                     <div className="input-group">
                                         <label className="modern-label">City</label>
-                                        <input 
-                                            className="modern-input" 
-                                            name="city" 
-                                            placeholder="City" 
-                                            value={formData.city} 
-                                            onChange={e => setFormData({...formData, city: e.target.value})} 
+                                        <input
+                                            className="modern-input"
+                                            name="city"
+                                            placeholder="City"
+                                            value={formData.city}
+                                            onChange={e => setFormData({ ...formData, city: e.target.value })}
                                         />
                                     </div>
                                     <div className="input-group">
                                         <label className="modern-label">Zip Code</label>
-                                        <input 
-                                            className="modern-input" 
-                                            name="zip" 
-                                            placeholder="Zip" 
-                                            value={formData.zip} 
-                                            onChange={e => setFormData({...formData, zip: e.target.value})} 
+                                        <input
+                                            className="modern-input"
+                                            name="zip"
+                                            placeholder="Zip"
+                                            value={formData.zip}
+                                            onChange={e => setFormData({ ...formData, zip: e.target.value })}
                                         />
                                     </div>
                                 </div>
@@ -590,7 +590,7 @@ const Profile = () => {
 
                                     // Determine Image to show (Standard or First Custom Image)
                                     let displayImage = null;
-                                    if(order.orderType === 'STANDARD' && order.productImage) {
+                                    if (order.orderType === 'STANDARD' && order.productImage) {
                                         displayImage = order.productImage;
                                     } else if (order.orderType === 'CUSTOM' && order.customImages && order.customImages.length > 0) {
                                         displayImage = order.customImages[0];
@@ -621,19 +621,23 @@ const Profile = () => {
                                             <div className="order-body">
                                                 {/* Thumbnail Image */}
                                                 {displayImage ? (
-                                                    <img 
-                                                        src={`http://localhost:5000/uploads/${displayImage}`} 
-                                                        alt="item" 
+                                                    <img
+                                                        src={
+                                                            displayImage.startsWith('http')
+                                                                ? displayImage
+                                                                : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${displayImage}`
+                                                        }
+                                                        alt="item"
                                                         className="order-thumbnail"
                                                     />
                                                 ) : (
-                                                    <div className="order-thumbnail" style={{ background: '#E0E0E0', display:'flex', alignItems:'center', justifyContent:'center', color:'#888', fontSize:'0.7rem' }}>
+                                                    <div className="order-thumbnail" style={{ background: '#E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '0.7rem' }}>
                                                         No Img
                                                     </div>
                                                 )}
-                                                
+
                                                 <div className="order-info">
-                                                    <h4 style={{ margin: '0 0 4px 0', color: palette.deep, fontSize:'1.1rem' }}>
+                                                    <h4 style={{ margin: '0 0 4px 0', color: palette.deep, fontSize: '1.1rem' }}>
                                                         {order.orderType === 'STANDARD' ? order.productName : 'Custom Request'}
                                                     </h4>
                                                     <p style={{ margin: 0, fontSize: '0.9rem', color: palette.flame, fontWeight: '600' }}>
@@ -647,7 +651,7 @@ const Profile = () => {
                                                             <p className="custom-text">
                                                                 {order.description || order.customDetails?.description || "No description provided."}
                                                             </p>
-                                                            
+
                                                             <span className="custom-label">Material</span>
                                                             <p className="custom-text">
                                                                 {order.material || order.customDetails?.material || "Not specified"}
@@ -658,12 +662,20 @@ const Profile = () => {
                                                                     <span className="custom-label">Reference Images</span>
                                                                     <div className="image-gallery">
                                                                         {order.customImages.map((img, idx) => (
-                                                                            <img 
+                                                                            <img
                                                                                 key={idx}
-                                                                                src={`http://localhost:5000/uploads/${img}`} 
+                                                                                src={
+                                                                                    img.startsWith('http')
+                                                                                        ? img
+                                                                                        : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${img}`
+                                                                                }
                                                                                 alt={`ref-${idx}`}
                                                                                 className="gallery-img"
-                                                                                onClick={() => setPreviewImage(`http://localhost:5000/uploads/${img}`)}
+                                                                                onClick={() => setPreviewImage(
+                                                                                    img.startsWith('http')
+                                                                                        ? img
+                                                                                        : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${img}`
+                                                                                )}
                                                                             />
                                                                         ))}
                                                                     </div>
@@ -701,12 +713,12 @@ const Profile = () => {
                                 <p style={{ fontSize: '0.85rem', color: palette.flame, marginBottom: '10px' }}>
                                     OTP sent to {user.email}
                                 </p>
-                                <input 
+                                <input
                                     className="modern-input"
-                                    placeholder="Enter OTP" 
-                                    value={otp} 
-                                    onChange={e => setOtp(e.target.value)} 
-                                    style={{ textAlign: 'center', letterSpacing: '4px', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '15px' }} 
+                                    placeholder="Enter OTP"
+                                    value={otp}
+                                    onChange={e => setOtp(e.target.value)}
+                                    style={{ textAlign: 'center', letterSpacing: '4px', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '15px' }}
                                 />
                                 <button onClick={confirmCancel} className="primary-btn" disabled={isCancelling}>
                                     {isCancelling ? <div className="spinner"></div> : "Confirm Cancellation"}
@@ -714,8 +726,8 @@ const Profile = () => {
                             </div>
                         )}
 
-                        <button 
-                            onClick={() => setShowCancelModal(false)} 
+                        <button
+                            onClick={() => setShowCancelModal(false)}
                             style={{ background: 'transparent', border: 'none', color: '#999', marginTop: '15px', cursor: 'pointer', textDecoration: 'underline' }}
                         >
                             Nevermind, keep order

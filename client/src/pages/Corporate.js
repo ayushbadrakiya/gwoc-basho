@@ -102,7 +102,7 @@ const Corporate = () => {
         setErrorMessage('');
 
         try {
-            const res = await axios.post('http://localhost:5000/api/corporate/inquiry', formData);
+            const res = await axios.post('https://gwoc-basho-1.onrender.com/api/corporate/inquiry', formData);
             
             if (res.data.success) {
                 setStatus('success');

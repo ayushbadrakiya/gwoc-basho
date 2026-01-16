@@ -38,7 +38,7 @@ const Signup = () => {
         e.preventDefault();
         setIsLoading(true); // Start Loading
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/register', formData);
+            const res = await axios.post('https://gwoc-basho-1.onrender.com/api/auth/register', formData);
 
             // If backend says OTP sent, switch to Step 2
             if (res.data.step === 'OTP_SENT') {
@@ -61,7 +61,7 @@ const Signup = () => {
         e.preventDefault();
         setIsLoading(true); // Start Loading
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/verify-register', {
+            const res = await axios.post('https://gwoc-basho-1.onrender.com/api/auth/verify-register', {
                 email: formData.email,
                 otp: otp
             });

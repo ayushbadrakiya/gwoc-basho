@@ -15,17 +15,17 @@ const palette = {
 const NewsSection = () => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     // 1. STATE FOR IMAGE LIGHTBOX
     const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/content/news');
+                const res = await axios.get('https://gwoc-basho-1.onrender.com/api/content/news');
                 setNews(res.data);
-            } catch (err) { 
-                console.error("Error fetching news:", err); 
+            } catch (err) {
+                console.error("Error fetching news:", err);
             } finally {
                 setLoading(false);
             }
@@ -38,6 +38,7 @@ const NewsSection = () => {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString('en-US', options);
     };
+    const CLOUD_NAME = "dnbplr9pw";
 
     return (
         <div className="news-section">
@@ -259,17 +260,24 @@ const NewsSection = () => {
                     <div className="news-grid">
                         {news.map((item) => (
                             <div key={item._id} className="news-card">
-                                
+
                                 {/* 2. CLICK HANDLER ON IMAGE WRAPPER */}
-                                <div 
-                                    className="image-wrapper" 
-                                    onClick={() => item.image && setSelectedImage(`http://localhost:5000/uploads/${item.image}`)}
+                                {/* Ensure CLOUD_NAME is defined at the top of your file */}
+                                <div
+                                    className="image-wrapper"
+                                    onClick={() => item.image && setSelectedImage(
+                                        item.image.startsWith('http')
+                                            ? item.image
+                                            : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${item.image}`
+                                    )}
                                 >
-                                    
-                                    
                                     {item.image ? (
                                         <img
-                                            src={`http://localhost:5000/uploads/${item.image}`}
+                                            src={
+                                                item.image.startsWith('http')
+                                                    ? item.image
+                                                    : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${item.image}`
+                                            }
                                             alt={item.title}
                                             className="news-image"
                                         />
@@ -293,10 +301,10 @@ const NewsSection = () => {
             {/* 3. LIGHTBOX OVERLAY COMPONENT */}
             {selectedImage && (
                 <div className="lightbox-overlay" onClick={() => setSelectedImage(null)}>
-                    <img 
-                        src={selectedImage} 
-                        alt="Full Screen" 
-                        className="lightbox-image" 
+                    <img
+                        src={selectedImage}
+                        alt="Full Screen"
+                        className="lightbox-image"
                         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking image
                     />
                     <div className="close-hint">Click outside to close</div>

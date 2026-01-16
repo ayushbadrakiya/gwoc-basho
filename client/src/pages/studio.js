@@ -309,7 +309,7 @@ const StudioPage = () => {
                 <div className="founder-img-container">
                     <div className="founder-rect-bg"></div>
                     <img 
-                        src={SHIVANGI_IMAGE_URL} 
+                        src={"https://res.cloudinary.com/dnbplr9pw/image/upload/v1768483667/shivangi_bkqdeb.png"} 
                         alt="Shivangi Patel" 
                         className="founder-img"
                     />

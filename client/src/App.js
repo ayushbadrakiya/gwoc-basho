@@ -85,7 +85,7 @@ const Navigation = () => {
         accent: '#EDD8B4', 
         border: 'rgba(237, 216, 180, 0.15)'
     };
-
+    
     return (
         <>
             <style>{`
@@ -248,7 +248,7 @@ const Navigation = () => {
                     {/* Brand */}
                     <div className="brand">
                         <Link to="/" onClick={closeMenu}>
-                            <img src="/logo.jpg" alt="Basho" />
+                            <img src="https://res.cloudinary.com/dnbplr9pw/image/upload/v1768483654/logo_qp2lvq.jpg" alt="Basho" />
                         </Link>
                     </div>
 
@@ -266,7 +266,7 @@ const Navigation = () => {
                         <Link to="/workshops" className={`nav-link ${isActive('/workshops') ? 'active' : ''}`} onClick={closeMenu}>Workshops</Link>
                         <Link to="/event" className={`nav-link ${isActive('/event') ? 'active' : ''}`} onClick={closeMenu}>Events</Link>
                         <Link to="/testimonials" className={`nav-link ${isActive('/testimonials') ? 'active' : ''}`} onClick={closeMenu}>Stories</Link>
-                        <Link to="/studio" className={`nav-link ${isActive('/studio') ? 'active' : ''}`} onClick={closeMenu}>Studio</Link>
+                        <Link to="/studio" className={`nav-link ${isActive('/studio') ? 'active' : ''}`} onClick={closeMenu}>About Us</Link>
                         <Link to="/corporate" className={`nav-link ${isActive('/corporate') ? 'active' : ''}`} onClick={closeMenu}>Collab and Corporate</Link>
                         
 

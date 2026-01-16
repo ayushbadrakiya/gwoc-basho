@@ -36,7 +36,7 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/login', formData);
+            const res = await axios.post('https://gwoc-basho-1.onrender.com/api/auth/login', formData);
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             
@@ -56,7 +56,7 @@ const Login = () => {
         if(e) e.preventDefault(); // Handle cases where it's called without event (Resend)
         setResetLoading(true);
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/forgot-password-otp', { email: resetEmail });
+            const res = await axios.post('https://gwoc-basho-1.onrender.com/api/auth/forgot-password-otp', { email: resetEmail });
             if (res.data.success) {
                 alert("OTP sent to your email!");
                 setResetStep(2);
@@ -72,7 +72,7 @@ const Login = () => {
         e.preventDefault();
         setResetLoading(true);
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/reset-password', {
+            const res = await axios.post('https://gwoc-basho-1.onrender.com/api/auth/reset-password', {
                 email: resetEmail,
                 otp: resetOtp,
                 newPassword: newPassword

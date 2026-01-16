@@ -3,6 +3,9 @@ import axios from 'axios';
 import { Chart } from "react-google-charts";
 import { Menu, ChevronLeft } from 'lucide-react'; // Icons
 
+// --- ☁️ CLOUDINARY CONFIGURATION ---
+const CLOUD_NAME = "dnbplr9pw"; // ⚠️ REPLACE THIS WITH YOUR CLOUD NAME
+
 // --- THEME CONFIGURATION ---
 const palette = {
     deep: '#442D1C',
@@ -81,27 +84,27 @@ const Admin = () => {
     // --- FETCH FUNCTIONS ---
     const fetchContent = async () => {
         try {
-            const resNews = await axios.get('http://localhost:5000/api/content/news');
+            const resNews = await axios.get('https://gwoc-basho-1.onrender.com/api/content/news');
             setNewsList(resNews.data);
-            const resTest = await axios.get('http://localhost:5000/api/content/testimonials');
+            const resTest = await axios.get('https://gwoc-basho-1.onrender.com/api/content/testimonials');
             setTestList(resTest.data);
         } catch (err) { console.error(err); }
     };
     const fetchRegistrations = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/workshops/registrations');
+            const res = await axios.get('https://gwoc-basho-1.onrender.com/api/workshops/registrations');
             setRegistrations(res.data);
         } catch (err) { console.error("Error fetching registrations"); }
     };
     const fetchProducts = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/products');
+            const res = await axios.get('https://gwoc-basho-1.onrender.com/api/products');
             setProducts(res.data);
         } catch (err) { console.error(err); }
     };
     const fetchOrders = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/orders');
+            const res = await axios.get('https://gwoc-basho-1.onrender.com/api/orders');
             setOrders(res.data);
         } catch (err) { console.error(err); }
     };
@@ -109,7 +112,7 @@ const Admin = () => {
     const fetchInquiries = async () => {
         setLoadingInquiries(true);
         try {
-            const res = await axios.get('http://localhost:5000/api/corporate');
+            const res = await axios.get('https://gwoc-basho-1.onrender.com/api/corporate');
             setInquiries(res.data);
         } catch (err) {
             console.error("Error fetching inquiries", err);
@@ -119,7 +122,7 @@ const Admin = () => {
 
     const fetchWorkshopsList = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/workshops');
+            const res = await axios.get('https://gwoc-basho-1.onrender.com/api/workshops');
             setWorkshopsList(res.data);
         } catch (err) { console.error(err); }
     };
@@ -139,11 +142,11 @@ const Admin = () => {
         try {
             if (editMode) {
                 // UPDATE EXISTING
-                await axios.put(`http://localhost:5000/api/workshops/${editId}`, data);
+                await axios.put(`https://gwoc-basho-1.onrender.com/api/workshops/${editId}`, data);
                 alert("Workshop Updated!");
             } else {
                 // CREATE NEW
-                await axios.post('http://localhost:5000/api/workshops/add', data);
+                await axios.post('https://gwoc-basho-1.onrender.com/api/workshops/add', data);
                 alert("Workshop Added!");
             }
             
@@ -181,7 +184,7 @@ const Admin = () => {
     const handleDeleteInquiry = async (id) => {
         if (!window.confirm("Are you sure you want to delete this inquiry?")) return;
         try {
-            const res = await axios.delete(`http://localhost:5000/api/corporate/${id}`);
+            const res = await axios.delete(`https://gwoc-basho-1.onrender.com/api/corporate/${id}`);
             if (res.data.success) {
                 setInquiries(inquiries.filter(item => item._id !== id));
             }
@@ -198,14 +201,14 @@ const Admin = () => {
         data.append('description', newsForm.description);
         if (newsImage) data.append('image', newsImage);
         try {
-            await axios.post('http://localhost:5000/api/content/news/add', data);
+            await axios.post('https://gwoc-basho-1.onrender.com/api/content/news/add', data);
             alert("News Added!"); fetchContent();
             setNewsForm({ title: '', description: '' }); setNewsImage(null);
         } catch (err) { alert("Error adding news"); }
     };
     const handleDeleteNews = async (id) => {
         if (!window.confirm("Delete this news?")) return;
-        await axios.delete(`http://localhost:5000/api/content/news/${id}`); fetchContent();
+        await axios.delete(`https://gwoc-basho-1.onrender.com/api/content/news/${id}`); fetchContent();
     };
     const handleAddTestimonial = async (e) => {
         e.preventDefault();
@@ -215,50 +218,20 @@ const Admin = () => {
         data.append('designation', testForm.designation);
         if (testMedia) data.append('media', testMedia);
         try {
-            await axios.post('http://localhost:5000/api/content/testimonials/add', data);
+            await axios.post('https://gwoc-basho-1.onrender.com/api/content/testimonials/add', data);
             alert("Testimonial Added!"); fetchContent();
             setTestForm({ name: '', message: '', designation: '' }); setTestMedia(null);
         } catch (err) { alert("Error adding testimonial"); }
     };
     const handleDeleteTestimonial = async (id) => {
         if (!window.confirm("Delete this review?")) return;
-        await axios.delete(`http://localhost:5000/api/content/testimonials/${id}`); fetchContent();
+        await axios.delete(`https://gwoc-basho-1.onrender.com/api/content/testimonials/${id}`); fetchContent();
     };
-    const handleAddWorkshop = async (e) => {
-        e.preventDefault();
-        const data = new FormData();
-        data.append('title', wsForm.title);
-        data.append('date', wsForm.date);
-        data.append('seats', wsForm.seats);
-        data.append('description', wsForm.description);
-        data.append('category', wsForm.category);
-        data.append('price', wsForm.price || 0);
-        data.append('isAdmin', true);
-        if (wsImage) data.append('image', wsImage);
-        try {
-            if (editMode) {
-                // UPDATE EXISTING
-                await axios.put(`http://localhost:5000/api/workshops/${editId}`, data);
-                alert("Workshop Updated!");
-            } else {
-                // CREATE NEW
-                await axios.post('http://localhost:5000/api/workshops/add', data);
-                alert("Workshop Added!");
-            }
-
-            // Reset Form & State
-            setWsForm({ title: '', date: '', seats: '', description: '', category: 'GROUP', price: '' });
-            setWsImage(null);
-            setEditMode(false);
-            setEditId(null);
-            fetchWorkshopsList(); // Refresh list
-        } catch (err) { alert("Error adding workshop"); }
-    };
-
+    
     const handleDeleteWorkshop = async (id) => {
         if (!window.confirm("Are you sure? This cannot be undone.")) return;
         try {
-            await axios.delete(`http://localhost:5000/api/workshops/${id}`);
+            await axios.delete(`https://gwoc-basho-1.onrender.com/api/workshops/${id}`);
             alert("Workshop Deleted");
             fetchWorkshopsList();
         } catch (err) { alert("Error deleting workshop"); }
@@ -281,21 +254,21 @@ const Admin = () => {
         data.append('description', description);
         for (let i = 0; i < files.length; i++) data.append('images', files[i]);
         try {
-            await axios.post('http://localhost:5000/api/products', data);
+            await axios.post('https://gwoc-basho-1.onrender.com/api/products', data);
             alert('Product Added!');
             setName(''); setPrice(''); setDescription(''); setFiles([]); fetchProducts();
         } catch (err) { alert("Error adding product"); }
     };
     const updateTracking = async (id, newStatus) => {
         try {
-            await axios.put(`http://localhost:5000/api/orders/${id}/tracking`, { trackingStatus: newStatus });
+            await axios.put(`https://gwoc-basho-1.onrender.com/api/orders/${id}/tracking`, { trackingStatus: newStatus });
             fetchOrders();
         } catch (err) { alert(err.response?.data?.message || "Update failed"); }
     };
     const cancelOrder = async (id) => {
         if (!window.confirm("Cancel this order?")) return;
         try {
-            await axios.post(`http://localhost:5000/api/orders/${id}/cancel`, { isAdmin: true });
+            await axios.post(`https://gwoc-basho-1.onrender.com/api/orders/${id}/cancel`, { isAdmin: true });
             fetchOrders();
         } catch (err) { alert("Error cancelling"); }
     };
@@ -316,6 +289,14 @@ const Admin = () => {
             case 'Collaboration': return '#7B1FA2';
             default: return '#EF6C00';
         }
+    };
+
+    // --- HELPER FOR IMAGES ---
+    const getImageUrl = (path) => {
+        if (!path) return '';
+        return path.startsWith('http') 
+            ? path 
+            : `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${path}`;
     };
 
     // --- STYLES OBJECT ---
@@ -853,7 +834,7 @@ const Admin = () => {
                                                         {order.orderType === 'STANDARD' ? (
                                                             <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                                                 {order.productImage ? (
-                                                                    <img src={`http://localhost:5000/uploads/${order.productImage}`} alt="prod" style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '8px', border: `1px solid #eee`, boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }} />
+                                                                    <img src={getImageUrl(order.productImage)} alt="prod" style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '8px', border: `1px solid #eee`, boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }} />
                                                                 ) : <div style={{ width: '60px', height: '60px', background: '#eee', borderRadius: '8px' }}></div>}
                                                                 <div>
                                                                     <strong style={{ fontSize: '1.1rem', color: palette.deep }}>{order.productName}</strong><br />
@@ -870,8 +851,8 @@ const Admin = () => {
                                                                 {order.customImages && order.customImages.length > 0 && (
                                                                     <div style={{ marginTop: '5px', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                                                                         {order.customImages.map((img, idx) => (
-                                                                            <a key={idx} href={`http://localhost:5000/uploads/${img}`} target="_blank" rel="noreferrer">
-                                                                                <img src={`http://localhost:5000/uploads/${img}`} alt="ref" style={{ width: '40px', height: '40px', objectFit: 'cover', border: `1px solid ${palette.copper}`, borderRadius: '6px' }} />
+                                                                            <a key={idx} href={getImageUrl(img)} target="_blank" rel="noreferrer">
+                                                                                <img src={getImageUrl(img)} alt="ref" style={{ width: '40px', height: '40px', objectFit: 'cover', border: `1px solid ${palette.copper}`, borderRadius: '6px' }} />
                                                                             </a>
                                                                         ))}
                                                                     </div>
@@ -926,7 +907,7 @@ const Admin = () => {
                             <div className="news-grid">
                                 {newsList.map(item => (
                                     <div key={item._id} style={{ border: `1px solid ${palette.border}`, borderRadius: '12px', background: '#fff', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.03)' }}>
-                                        {item.image && <img src={`http://localhost:5000/uploads/${item.image}`} alt="news" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />}
+                                        {item.image && <img src={getImageUrl(item.image)} alt="news" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />}
                                         <div style={{ padding: '20px' }}>
                                             <h4 style={{ color: palette.deep, margin: '0 0 10px', fontSize: '1.2rem', fontFamily: "'Playfair Display', serif" }}>{item.title}</h4>
                                             <p style={{ fontSize: '0.9rem', color: '#666', lineHeight: '1.5' }}>{item.description.substring(0, 80)}...</p>
