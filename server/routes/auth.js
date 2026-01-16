@@ -8,9 +8,6 @@ const User = require('../models/User');
 const JWT_SECRET = "secret123";
 
 // --- NODEMAILER CONFIG ---
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
-
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
   port: 2525, // ⚠️ CRITICAL: Port 2525 bypasses Render's firewall
@@ -29,8 +26,7 @@ const transporter = nodemailer.createTransport({
   logger: true 
 });
 
-// 2. Add a Verification Check on Server Start
-// This runs immediately when your server starts to test the connection
+// Verification Check on Server Start
 transporter.verify((error, success) => {
   if (error) {
     console.error("❌ SMTP CONNECTION FAILED ON STARTUP:", error);
@@ -38,6 +34,7 @@ transporter.verify((error, success) => {
     console.log("✅ SMTP SERVER IS CONNECTED AND READY ON PORT 2525");
   }
 });
+
 // Helper to generate & send OTP
 const sendOtpEmail = async (user, subject) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -46,13 +43,15 @@ const sendOtpEmail = async (user, subject) => {
     await user.save();
 
     await transporter.sendMail({
-        from: `"OTP" <bashobyshivangi@gmail.com>`,
+        from: `"Basho Support" <bashobyshivangi@gmail.com>`, // ✅ FIXED: Uses Verified Sender
         to: user.email,
         subject: subject,
         text: `Your Verification Code is: ${otp}`
     });
     return otp;
 };
+
+// 1. GET PROFILE
 router.get('/profile/:id', async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select('-password -otp'); // Don't send password
@@ -98,6 +97,7 @@ router.put('/profile/update', async (req, res) => {
         res.status(500).json({ msg: "Server Error" });
     }
 });
+
 // 1. REGISTER (Step 1: Save User & Send OTP)
 router.post('/register', async (req, res) => {
     try {
@@ -131,9 +131,9 @@ router.post('/register', async (req, res) => {
 
         await user.save();
 
-        // 4. SEND EMAIL (This is the part that was likely missing or failing)
+        // 4. SEND EMAIL
         await transporter.sendMail({
-            from: `"OTP Verification" <${transporter.options.auth.user}>`, // Auto-uses your email
+            from: `"Basho Support" <bashobyshivangi@gmail.com>`, // ✅ FIXED: Consistent Sender
             to: email,
             subject: "Verify Your Account",
             html: `
@@ -147,7 +147,7 @@ router.post('/register', async (req, res) => {
         res.json({ success: true, step: 'OTP_SENT', msg: "OTP sent to your email" });
 
     } catch (err) {
-        console.error("Register Error:", err); // <--- Check your terminal if this prints!
+        console.error("Register Error:", err); 
         res.status(500).json({ msg: "Server Error: Could not send email" });
     }
 });
@@ -203,19 +203,19 @@ router.post('/forgot-password-otp', async (req, res) => {
         // Generate 6 digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Save OTP to user (In production, hash this and set an expiry time)
+        // Save OTP to user
         user.otp = otp; 
         await user.save();
 
-        // Send Email (Reuse your existing nodemailer transporter)
+        // Send Email
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: `"Basho Support" <bashobyshivangi@gmail.com>`, // ✅ FIXED: Changed from process.env.EMAIL_USER
             to: email,
             subject: 'Reset Password OTP - Basho',
             text: `Your OTP for password reset is: ${otp}`
         };
 
-        await transporter.sendMail(mailOptions); // Ensure 'transporter' is defined in your file
+        await transporter.sendMail(mailOptions);
 
         res.json({ success: true, message: "OTP sent to email" });
 
@@ -264,15 +264,11 @@ router.post('/req-otp', async (req, res) => {
         user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 mins
         await user.save();
 
-        // Send Email (Using your Nodemailer setup)
-        // Make sure you import 'transporter' or pass the email logic here
-        // NOTE: You might need to export 'sendOtpEmail' helper from your main file or redefine it here.
-
         const mailOptions = {
-            from: `"Basho Support" <bashobyshivangi@gmail.com>`, // Use a business-like name
+            from: `"Basho Support" <bashobyshivangi@gmail.com>`, // ✅ FIXED: Consistent Sender
             to: email,
             subject: "Verify Your Account",
-            text: `Your Verification Code is: ${otp}`, // Fallback for old devices
+            text: `Your Verification Code is: ${otp}`,
             html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
             <h2 style="color: #2c3e50; text-align: center;">Welcome to Basho!</h2>
@@ -293,7 +289,6 @@ router.post('/req-otp', async (req, res) => {
     `
         };
 
-        // Assuming 'transporter' is available here (imported from config or defined above)
         await transporter.sendMail(mailOptions);
 
         res.json({ success: true, msg: "OTP Sent" });

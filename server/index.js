@@ -3,13 +3,11 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
-const nodemailer = require('nodemailer'); // <--- Import Nodemailer
+const nodemailer = require('nodemailer'); 
 const crypto = require('crypto');
 require('dotenv').config();
 
-
 const app = express();
-
 
 // Import Models
 const Order = require('./models/Order');
@@ -17,12 +15,7 @@ const Product = require('./models/Product');
 const User = require('./models/User');
 const ordersRoute = require('./routes/orders');
 const paymentRoute = require('./routes/payment');
-// ... existing imports
 const corporateRoutes = require('./routes/corporateRoutes');
-
-// ... existing middleware
-
-
 
 app.use(cors());
 app.use(express.json());
@@ -31,10 +24,7 @@ app.use('/api/payment', paymentRoute);
 app.use('/api/corporate', corporateRoutes);
 
 
-// --- EMAIL CONFIGURATION (SAME AS AUTH.JS) ---
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
-
+// --- EMAIL CONFIGURATION (FIXED FOR BREVO) ---
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
   port: 2525, // ⚠️ CRITICAL: Port 2525 bypasses Render's firewall
@@ -49,12 +39,11 @@ const transporter = nodemailer.createTransport({
   },
   family: 4, // ⚠️ Forces IPv4 to prevent connection drops
   connectionTimeout: 10000, // Fail fast if blocked (10s)
-  debug: true, // Show us exactly what happens in logs
+  debug: true, 
   logger: true 
 });
 
-// 2. Add a Verification Check on Server Start
-// This runs immediately when your server starts to test the connection
+// Verification Check on Server Start
 transporter.verify((error, success) => {
   if (error) {
     console.error("❌ SMTP CONNECTION FAILED ON STARTUP:", error);
@@ -64,10 +53,10 @@ transporter.verify((error, success) => {
 });
 
 // Helper function to send emails safely
-const sendEmail = async (to, subject, htmlContent,attachments = []) => {
+const sendEmail = async (to, subject, htmlContent, attachments = []) => {
     try {
         await transporter.sendMail({
-            from: `"My Shop" <${EMAIL_USER}>`,
+            from: `"My Shop" <bashobyshivangi@gmail.com>`, // ✅ FIXED: Uses Verified Sender, NOT the Brevo Login ID
             to: to,
             subject: subject,
             html: htmlContent,
@@ -80,7 +69,6 @@ const sendEmail = async (to, subject, htmlContent,attachments = []) => {
 };
 
 // --- STATIC FILES & DB ---
-// --- CLOUDINARY CONFIGURATION ---
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
@@ -93,19 +81,19 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'pottery_shop', // The folder name in your Cloudinary dashboard
+        folder: 'pottery_shop', 
         allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
     },
 });
 
 const upload = multer({ storage: storage });
-// --------------------------------
 const contentRoutes = require('./routes/content')(upload);
-
 const workshopRoutes = require('./routes/workshops')(upload, sendEmail);
+
 app.use('/api/workshops', workshopRoutes);
 app.use('/api/content', contentRoutes);
-const MONGO_URI = process.env.MONGO_URI
+
+const MONGO_URI = process.env.MONGO_URI;
 mongoose.connect(MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
@@ -125,11 +113,9 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
     const { 
         email, 
         otp, 
-        // 👇 NEW: Extract Payment Details
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
-        // ---------------------------
         productName, 
         productId, 
         amount, 
@@ -142,8 +128,7 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
         address,
         city,
         zip,
-        customDetails,
-        customImages 
+        customDetails 
     } = req.body;
 
     // --- 1. SECURITY CHECK: VERIFY OTP ---
@@ -159,32 +144,27 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
     if (user.otp !== otp) {
         return res.status(400).json({ success: false, message: "Invalid OTP. Order failed." });
     }
+    
     let processedCustomImages = [];
     if (req.files && req.files.length > 0) {
-        // Cloudinary stores the full URL in 'path', not 'filename'
         processedCustomImages = req.files.map(file => file.path);
     }
 
     // --- 1.5 SECURITY CHECK: VERIFY RAZORPAY PAYMENT ---
-    // Only verify if it is a paid order (Standard) or amount > 0
     if (orderType === 'STANDARD' && amount > 0) {
-        
         if (!razorpay_payment_id || !razorpay_signature) {
              return res.status(400).json({ success: false, message: "Payment details missing." });
         }
 
-        // Create the expected signature
         const generated_signature = crypto
             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
             .update(razorpay_order_id + "|" + razorpay_payment_id)
             .digest('hex');
 
-        // Compare signatures
         if (generated_signature !== razorpay_signature) {
             return res.status(400).json({ success: false, message: "Payment verification failed. Invalid Signature." });
         }
     }
-    // ----------------------------------------------------
 
     // 2. Clear OTP (Prevent reuse)
     user.otp = null;
@@ -211,7 +191,6 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
             description: description || '',
             material: material || ''
         },
-        // 👇 NEW: Save Payment ID
         paymentId: razorpay_payment_id || null, 
         status: 'PROCESSING',
         trackingStatus: 'Processing'
@@ -222,9 +201,10 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
     let attachments = [];
 
     // Add the Thank You Image
+    // ✅ FIXED: Changed from local 'C:\Users...' path (which crashes Render) to Cloudinary URL
     attachments.push({
         filename: 'thanks.png',
-        path: 'C:\\Users\\AYUSH\\OneDrive\\Desktop\\gwoc\\client\\public\\thanks.png', 
+        path: 'https://res.cloudinary.com/dnbplr9pw/image/upload/v1768483668/thanks_jqumin.png', 
         cid: 'thankyouImage' 
     });
 
@@ -302,8 +282,6 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
   }
 });
 
-   
-
 
 // 2. CANCEL ORDER (Sends Cancellation Email)
 app.post('/api/orders/:id/cancel', async (req, res) => {
@@ -377,8 +355,6 @@ app.post('/api/orders/:id/cancel', async (req, res) => {
             `;
         }
 
-        // Send the specific email to the customer
-        // We use 'order.email' to ensure it goes to the customer, even if Admin triggered it
         sendEmail(order.email, emailSubject, emailBody);
 
         res.json({ success: true, message: "Order Cancelled Successfully" });
@@ -391,24 +367,15 @@ app.post('/api/orders/:id/cancel', async (req, res) => {
 
 app.get('/user/:userId', async (req, res) => {
     try {
-        // Find orders where 'email' matches (or store userId in Order model for better linking)
-        // Assuming we query by email since that's what was saved in previous steps
-        // First, we might need to find the user to get the email, OR the frontend sends the email.
-        // Let's assume we saved 'userId' in the Order model? 
-        // If not, we will query by the email passed in the query string or body.
-        
-        // BETTER APPROACH: Just query by email if that's what we have
-        // But the frontend usually passes ID. Let's try to query by Email for now since Order model has 'email'.
-        
-        const { email } = req.query; // Frontend will send ?email=user@example.com
-        
+        const { email } = req.query; 
         const orders = await Order.find({ email: email }).sort({ createdAt: -1 });
         res.json(orders);
     } catch (err) {
         res.status(500).json({ msg: err.message });
     }
 });
-// 3. UPDATE TRACKING (Optional: Send Email on "Shipped" or "Delivered")
+
+// 3. UPDATE TRACKING
 app.put('/api/orders/:id/tracking', async (req, res) => {
   try {
     const { trackingStatus } = req.body;
@@ -427,14 +394,6 @@ app.put('/api/orders/:id/tracking', async (req, res) => {
     order.trackingStatus = trackingStatus;
     await order.save();
 
-    // --- OPTIONAL: SEND EMAIL ON STATUS CHANGE ---
-    // Uncomment below if you want email updates for tracking too!
-    /*
-    const subject = `Order Update: ${trackingStatus}`;
-    const body = `<p>Your order is now <strong>${trackingStatus}</strong>.</p>`;
-    sendEmail(order.email, subject, body);
-    */
-
     res.json({ success: true, order });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -444,13 +403,12 @@ app.put('/api/orders/:id/tracking', async (req, res) => {
 // GET ALL ORDERS
 app.get('/api/orders', async (req, res) => {
     try {
-        // Sort by newest first
         const orders = await Order.find().sort({ createdAt: -1 }); 
         res.json(orders);
     } catch(err) { res.status(500).json({message: err.message}); }
 });
 
-const PORT = process.env.PORT || 5000; // Use Cloud port OR 5000 locally
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
