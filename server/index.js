@@ -62,21 +62,33 @@ const sendEmail = async (to, subject, htmlContent,attachments = []) => {
 };
 
 // --- STATIC FILES & DB ---
-app.use('/uploads', express.static('uploads'));
+// --- CLOUDINARY CONFIGURATION ---
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Multer Config
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
-const upload = multer({ storage: storage,limits: { fileSize: 50 * 1024 * 1024 } });
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'pottery_shop', // The folder name in your Cloudinary dashboard
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    },
+});
+
+const upload = multer({ storage: storage });
+// --------------------------------
 const contentRoutes = require('./routes/content')(upload);
 
 const workshopRoutes = require('./routes/workshops')(upload, sendEmail);
 app.use('/api/workshops', workshopRoutes);
 app.use('/api/content', contentRoutes);
-
-mongoose.connect('mongodb://localhost:27017/pottery_shop')
+const MONGO_URI = process.env.MONGO_URI
+mongoose.connect(MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
@@ -131,7 +143,8 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
     }
     let processedCustomImages = [];
     if (req.files && req.files.length > 0) {
-        processedCustomImages = req.files.map(file => file.filename);
+        // Cloudinary stores the full URL in 'path', not 'filename'
+        processedCustomImages = req.files.map(file => file.path);
     }
 
     // --- 1.5 SECURITY CHECK: VERIFY RAZORPAY PAYMENT ---
@@ -203,7 +216,7 @@ app.post('/api/buy', upload.array('customImages', 5), async (req, res) => {
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 600px; margin: 0 auto;">
         
        <div style="text-align: center; margin-bottom: 20px;">
-            <img src="cid:thankyouImage" alt="Thank You" style="width: 100%; max-width: 300px; border-radius: 8px;" />
+            <img src="https://res.cloudinary.com/dnbplr9pw/image/upload/v1768483668/thanks_jqumin.png" alt="Thank You" style="width: 100%; max-width: 300px; border-radius: 8px;" />
         </div>
 
         <h2 style="color: #333; text-align: center;">Order Confirmation</h2>
@@ -419,6 +432,8 @@ app.get('/api/orders', async (req, res) => {
     } catch(err) { res.status(500).json({message: err.message}); }
 });
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+const PORT = process.env.PORT || 5000; // Use Cloud port OR 5000 locally
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
