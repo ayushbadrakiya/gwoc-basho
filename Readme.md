@@ -1,10 +1,6 @@
 # 🏺 Basho - Handcrafted Pottery Studio Platform
 
 > "Where clay meets poetry. A place for mindful creation."
-
-![Project Banner](https://via.placeholder.com/1200x400?text=Basho+Pottery+Studio) 
-*(Replace the link above with a screenshot of your beautiful Homepage)*
-
 ## 📖 Overview
 
 **Basho** is a full-stack web application designed for a boutique pottery studio in Surat, India. It serves as a digital storefront and community hub, allowing users to purchase handcrafted ceramics, book workshops, request custom pieces, and explore the studio's story.
@@ -48,7 +44,7 @@ Built with the **MERN Stack** (MongoDB, Express, React, Node.js), it features a 
 | **Database** | MongoDB (Atlas) |
 | **Authentication** | JSON Web Tokens (JWT), Nodemailer (OTP) |
 | **Payments** | Razorpay SDK |
-| **File Storage** | Multer (Local/Server storage) |
+| **File Storage** | Cloudnary |
 
 ---
 
